@@ -12,7 +12,7 @@ If you discover a security vulnerability in ZugaShield, please report it respons
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Instead, please email: **antonio@zuga.dev**
+Instead, please email: **buga@zugabot.ai**
 
 Include:
 - Description of the vulnerability
