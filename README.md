@@ -16,6 +16,8 @@
   </p>
 </p>
 
+> Part of the [Zuga studio ecosystem](https://github.com/Zuga-Technologies) — software for the agent era.
+
 ---
 
 65% of organizations deploying AI agents have **no security defense layer**. ZugaShield is a production-tested, open-source library that protects your AI agents with:
