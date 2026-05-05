@@ -24,7 +24,7 @@
 
 - **Zero dependencies** — works out of the box, no C extensions
 - **< 15ms overhead** — compiled regex fast path, async throughout
-- **150+ signatures** — curated threat catalog with auto-updating threat feed
+- **475+ regex patterns across 152 curated signatures** — categorised threat catalog with auto-updating threat feed
 - **MCP-aware** — scans tool definitions for hidden injection payloads
 - **7 defense layers** — defense in depth, not a single point of failure
 - **Auto-updating** — opt-in signature feed pulls new defenses from GitHub Releases
@@ -102,7 +102,7 @@ ZugaShield uses layered defense — every input and output passes through multip
 
 | Attack | How | Layer |
 |--------|-----|-------|
-| Direct prompt injection | Compiled regex + 150+ catalog signatures | 2 |
+| Direct prompt injection | Compiled regex + 152 catalog signatures (475+ patterns) | 2 |
 | Indirect injection | Spotlighting + content analysis | 2 |
 | Unicode smuggling | Homoglyph + invisible character detection | 2 |
 | Encoding evasion | Nested base64 / hex / ROT13 decoding | 2 |
@@ -116,7 +116,7 @@ ZugaShield uses layered defense — every input and output passes through multip
 | Path traversal | Sensitive path + symlink detection | 3 |
 | Memory poisoning | Write + read path validation | 4 |
 | RAG document injection | Pre-ingestion imperative detection | 4 |
-| Secret / PII leakage | 70+ secret patterns + PII regex | 5 |
+| Secret / PII leakage | Curated secret + PII regex (Stripe/AWS/Google/GitHub/Slack tokens, Bearer, private keys, credit cards, more) | 5 |
 | Canary token leaks | Session-specific honeypot tokens | 5 |
 | DNS exfiltration | Subdomain depth / entropy analysis | 5 |
 | Image-based injection | EXIF + alt-text + OCR scanning | Multi |
@@ -287,11 +287,11 @@ How does ZugaShield compare to other open-source AI security projects?
 
 | Capability | ZugaShield | NeMo Guardrails | LlamaFirewall | LLM Guard | Guardrails AI | Vigil |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| Prompt injection detection | 150+ sigs | Colang rules | PromptGuard 2 | DeBERTa model | Validators | Yara + embeddings |
+| Prompt injection detection | 475+ patterns / 152 sigs | Colang rules | PromptGuard 2 | DeBERTa model | Validators | Yara + embeddings |
 | Tool call validation (SSRF, cmd injection) | Layer 3 | - | - | - | - | - |
 | Memory poisoning defense | Layer 4 | - | - | - | - | - |
 | RAG document pre-scan | Layer 4 | - | - | - | - | - |
-| Secret / PII leakage (DLP) | 70+ patterns | - | - | Presidio | Regex validators | - |
+| Secret / PII leakage (DLP) | Curated regex | - | - | Presidio | Regex validators | - |
 | Canary token traps | Built-in | - | - | - | - | - |
 | DNS exfiltration detection | Built-in | - | - | - | - | - |
 | Behavioral anomaly / session tracking | Layer 6 | - | - | - | - | - |
@@ -324,7 +324,7 @@ ZugaShield maps to all 10 risks in the [OWASP Agentic AI Security Initiative](ht
 
 | OWASP Risk | Description | ZugaShield Defense |
 |------------|-------------|-------------------|
-| **ASI01** Agent Goal Hijacking | Prompt injection redirects agent behavior | Layer 2 (Prompt Armor): 150+ signatures, TF-IDF ML classifier, spotlighting, encoding detection |
+| **ASI01** Agent Goal Hijacking | Prompt injection redirects agent behavior | Layer 2 (Prompt Armor): 152 signatures / 475+ patterns, TF-IDF ML classifier, spotlighting, encoding detection |
 | **ASI02** Tool Misuse | Agent tricked into dangerous tool calls | Layer 3 (Tool Guard): SSRF detection, command injection, path traversal, risk matrix |
 | **ASI03** Identity & Privilege Abuse | Privilege escalation via agent actions | Layer 5 (Exfiltration Guard) + Layer 6 (Anomaly Detector): egress allowlists, behavioral baselines |
 | **ASI04** Supply Chain Vulnerabilities | Poisoned models, tampered dependencies | ML Supply Chain: SHA-256 hash verification, canary validation, model version pinning |

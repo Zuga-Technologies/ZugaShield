@@ -302,6 +302,8 @@ class ZugaShield:
         session_id = ctx.get("session_id", "default")
 
         # L2 — Prompt Armor (signature-based, fast regex scan)
+        # Tracks whether L2 found any signal — feeds the ML fast-path gate below.
+        prompt_armor_clean = True
         layer = self._layers.get("prompt_armor")
         if layer:
             try:
@@ -314,12 +316,16 @@ class ZugaShield:
                 self._audit.log(decision, context=ctx)
                 await self._fire_hooks(decision)
                 return decision
+            prompt_armor_clean = (decision.threat_count == 0)
 
         # ML Detector (optional — neural injection detection)
+        # Fast-path: when L2 regex catalog found zero signal, signal ML to run
+        # only its cheap TF-IDF tier and skip ONNX (heavy neural net). ONNX
+        # remains active when L2 saw any signal — that's where ambiguity lives.
         ml = self._layers.get("ml_detector")
         if ml:
             try:
-                decision = await ml.check(text)
+                decision = await ml.check(text, skip_heavy=prompt_armor_clean)
             except Exception as e:
                 decision = self._handle_layer_error("ml_detector", e)
             if decision.is_blocked:

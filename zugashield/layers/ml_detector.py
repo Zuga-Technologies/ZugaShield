@@ -493,7 +493,7 @@ class MLDetectorLayer:
     # Main check
     # =========================================================================
 
-    async def check(self, text: str) -> ShieldDecision:
+    async def check(self, text: str, skip_heavy: bool = False) -> ShieldDecision:
         """
         Run tiered ML detection on input text.
 
@@ -502,9 +502,15 @@ class MLDetectorLayer:
             - score <= 0.3       -> ALLOW
             - ambiguous          -> proceed to Tier 2
 
-        Tier 2 (ONNX DeBERTa): Semantic check (~30ms)
+        Tier 2 (ONNX DeBERTa): Semantic check (~30-900ms depending on hardware)
             - score >= threshold -> DETECT
             - score < threshold  -> ALLOW
+
+        Args:
+            text: Input to scan.
+            skip_heavy: When True, never run Tier 2 (ONNX). Set by check_prompt
+                when an upstream regex catalog scan returned zero signal — keeps
+                clean inputs on the fast path while preserving TF-IDF coverage.
         """
         if not self._config.ml_detector_enabled:
             return allow_decision(self.LAYER_NAME)
@@ -540,6 +546,10 @@ class MLDetectorLayer:
                 return allow_decision(self.LAYER_NAME, elapsed)
 
             # Ambiguous zone (0.3 < score < threshold) — fall through to ONNX
+            # unless caller signalled fast-path (upstream regex saw zero signal).
+            if skip_heavy:
+                elapsed = (time.perf_counter() - start) * 1000
+                return allow_decision(self.LAYER_NAME, elapsed)
 
         # === Tier 2: ONNX DeBERTa ===
         onnx_score = self._run_onnx(text)
