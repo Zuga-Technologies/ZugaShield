@@ -134,8 +134,8 @@ def shield_wrap_tool(
         try:
             decision = _run_async(
                 shield_instance.check_tool_call(
-                    tool_name=tool_name,
-                    params=params,
+                    tool_name,
+                    params,
                     session_id=session_id,
                 )
             )
@@ -166,7 +166,7 @@ def shield_wrap_tool(
             try:
                 out_decision = _run_async(
                     shield_instance.check_output(
-                        output=output_text,
+                        output_text,
                         context={"tool": tool_name, "session_id": session_id},
                     )
                 )
@@ -206,8 +206,8 @@ def shield_wrap_tool(
 
             try:
                 decision = await shield_instance.check_tool_call(
-                    tool_name=tool_name,
-                    params=params,
+                    tool_name,
+                    params,
                     session_id=session_id,
                 )
                 if decision.is_blocked:
@@ -233,7 +233,7 @@ def shield_wrap_tool(
             if check_output and result is not None:
                 try:
                     out_decision = await shield_instance.check_output(
-                        output=str(result),
+                        str(result),
                         context={"tool": tool_name, "session_id": session_id},
                     )
                     if out_decision.is_blocked:
@@ -344,8 +344,8 @@ class ZugaShieldToolMixin:
         try:
             decision = _run_async(
                 shield.check_tool_call(
-                    tool_name=tool_name,
-                    params=params,
+                    tool_name,
+                    params,
                     session_id=self._zugashield_session_id,
                 )
             )
@@ -372,7 +372,7 @@ class ZugaShieldToolMixin:
             try:
                 out_decision = _run_async(
                     shield.check_output(
-                        output=str(result),
+                        str(result),
                         context={"tool": tool_name, "session_id": self._zugashield_session_id},
                     )
                 )
