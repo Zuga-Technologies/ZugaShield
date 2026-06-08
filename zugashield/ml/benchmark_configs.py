@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 
 @dataclass
@@ -36,7 +36,7 @@ class BenchConfig:
     downsample_injection_to: int = 0  # 0 = no downsampling
     # Features
     use_heuristics: bool = True
-    ngram_range: tuple = (3, 5)
+    ngram_range: tuple[int, int] = (3, 5)
     max_features: int = 50000
     # Model
     C: float = 1.0
@@ -129,7 +129,7 @@ CONFIGS = [
 ]
 
 
-def _load_datasets(config: BenchConfig):
+def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
     """Load datasets according to config. Returns (texts, labels)."""
     from datasets import load_dataset
     import random
@@ -286,7 +286,7 @@ def _load_datasets(config: BenchConfig):
     return texts, labels
 
 
-def _train_and_save(config: BenchConfig, texts, labels, output_path: str):
+def _train_and_save(config: BenchConfig, texts: list[str], labels: list[int], output_path: str) -> float:
     """Train a model with the given config and return (cv_f1, model_path)."""
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import LogisticRegression
@@ -343,7 +343,7 @@ def _train_and_save(config: BenchConfig, texts, labels, output_path: str):
     return cv_f1
 
 
-def _evaluate_coverage(model_path: str):
+def _evaluate_coverage(model_path: str) -> dict[str, Any]:
     """Run the model against deepset + gandalf and return detection rates."""
     from datasets import load_dataset
     from zugashield import ZugaShield
@@ -359,7 +359,7 @@ def _evaluate_coverage(model_path: str):
     shield = ZugaShield(config)
 
     # Force-load the benchmark model
-    ml_layer = shield._ml_detector
+    ml_layer = shield._ml_detector  # type: ignore[attr-defined]
     if ml_layer is None:
         return {"error": "ML layer not found"}
 
@@ -378,7 +378,7 @@ def _evaluate_coverage(model_path: str):
     ds_gandalf = load_dataset("Lakera/gandalf_ignore_instructions", split="train")
     gandalf = [row.get("text", row.get("prompt", "")) for row in ds_gandalf if row.get("text", row.get("prompt", ""))]
 
-    def run(coro):
+    def run(coro: Any) -> Any:
         return asyncio.run(coro)
 
     # Deepset injection recall
@@ -424,7 +424,7 @@ def _evaluate_coverage(model_path: str):
     }
 
 
-def main():
+def main() -> None:
     import tempfile
     import os
 

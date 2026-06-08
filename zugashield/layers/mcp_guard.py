@@ -61,7 +61,7 @@ logger = logging.getLogger(__name__)
 # Aligned with PromptArmorLayer fast patterns but scoped to MCP field content
 # =============================================================================
 
-_INJECTION_KEYWORDS: List[Tuple[re.Pattern, str]] = [
+_INJECTION_KEYWORDS: List[Tuple[re.Pattern[str], str]] = [
     (
         re.compile(
             r"ignore\s+(?:all\s+)?(?:previous|prior|above|earlier)\s+"
@@ -124,7 +124,7 @@ _INJECTION_KEYWORDS: List[Tuple[re.Pattern, str]] = [
 ]
 
 # Role override patterns in tool metadata
-_ROLE_OVERRIDE_PATTERNS: List[re.Pattern] = [
+_ROLE_OVERRIDE_PATTERNS: List[re.Pattern[str]] = [
     re.compile(
         r"\byou\s+(?:are|must|should|will)\s+(?:now\s+)?(?:act|behave|respond)\s+as\b",
         re.I,
@@ -140,7 +140,7 @@ _ROLE_OVERRIDE_PATTERNS: List[re.Pattern] = [
 ]
 
 # Hidden instruction patterns: content made invisible via whitespace packing
-_HIDDEN_INSTRUCTION_PATTERNS: List[re.Pattern] = [
+_HIDDEN_INSTRUCTION_PATTERNS: List[re.Pattern[str]] = [
     # Many consecutive spaces (>5) between words — typical whitespace stuffing
     re.compile(r"\S\s{5,}\S"),
     # Newline-separated content buried after long blank lines

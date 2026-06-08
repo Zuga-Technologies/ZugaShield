@@ -34,7 +34,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import logging
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ def shield_wrap_tool(
 
         # ---- Pre-execution: Layer 3 (Tool Guard) --------------------------
         # Build a flat params dict from positional + keyword args
-        params: dict = dict(kwargs)
+        params: Dict[str, Any] = dict(kwargs)
         if args:
             params["_args"] = list(args)
 
@@ -366,7 +366,7 @@ class ZugaShieldToolMixin:
                 "[ZugaShield] Mixin pre-run error for '%s' — fail-open", tool_name
             )
 
-        result = super().run(*args, **kwargs)
+        result = super().run(*args, **kwargs)  # type: ignore[misc]
 
         if self._zugashield_check_output and result is not None:
             try:

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Dict, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, Optional, Tuple, TYPE_CHECKING
 
 from zugashield.types import (
     ThreatCategory,
@@ -64,7 +64,7 @@ class LLMJudgeLayer:
     def __init__(self, config: ShieldConfig) -> None:
         self._config = config
         self._enabled = getattr(config, "llm_judge_enabled", False)
-        self._provider: Optional[Tuple] = None
+        self._provider: Optional[Tuple[str, Any, str]] = None
         self._provider_name = "none"
         self._stats = {"checks": 0, "escalations": 0, "blocks": 0, "errors": 0}
 
@@ -160,6 +160,8 @@ class LLMJudgeLayer:
             # Truncate very long inputs
             truncated = text[:2000] if len(text) > 2000 else text
 
+            # Narrowing: is_available (checked above) guarantees a provider tuple.
+            assert self._provider is not None
             provider_type, client, model = self._provider
 
             if provider_type == "anthropic":
@@ -232,5 +234,5 @@ class LLMJudgeLayer:
             # Fail-open: return original fast-path decision
             return fast_decision
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         return {"layer": self.LAYER_NAME, "available": self.is_available, "provider": self._provider_name, **self._stats}

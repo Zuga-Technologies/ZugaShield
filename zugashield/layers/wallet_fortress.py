@@ -19,7 +19,7 @@ import logging
 import re
 import time
 from collections import deque
-from typing import Dict, List, Optional, Set, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Set, Tuple, TYPE_CHECKING
 
 from zugashield.types import (
     ThreatCategory,
@@ -72,8 +72,8 @@ class WalletFortressLayer:
         self._blocklisted_addresses: Set[str] = set()
         self._known_addresses: Set[str] = set()  # Previously used
         # Spend tracking
-        self._hourly_spend: deque = deque(maxlen=1000)  # (timestamp, amount_usd)
-        self._daily_spend: deque = deque(maxlen=10000)
+        self._hourly_spend: deque[Tuple[float, float]] = deque(maxlen=1000)  # (timestamp, amount_usd)
+        self._daily_spend: deque[Tuple[float, float]] = deque(maxlen=10000)
         self._last_approval_time: float = 0
         self._stats = {
             "checks": 0,
@@ -376,7 +376,7 @@ class WalletFortressLayer:
 
         return threats
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Return layer statistics."""
         now = time.time()
         return {

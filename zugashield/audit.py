@@ -43,7 +43,7 @@ class AuditEvent:
     elapsed_ms: float
     details: Dict[str, Any]
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
 
@@ -56,7 +56,7 @@ class ShieldAuditLogger:
     """
 
     def __init__(self, max_events: int = _MAX_EVENTS) -> None:
-        self._events: deque = deque(maxlen=max_events)
+        self._events: deque[AuditEvent] = deque(maxlen=max_events)
         self._counters = {
             "total_checks": 0,
             "total_blocks": 0,
@@ -66,7 +66,7 @@ class ShieldAuditLogger:
         }
         self._layer_stats: Dict[str, Dict[str, int]] = {}
 
-    def log(self, decision: ShieldDecision, context: Optional[Dict] = None) -> None:
+    def log(self, decision: ShieldDecision, context: Optional[Dict[str, Any]] = None) -> None:
         """
         Log a shield decision.
 
@@ -98,7 +98,7 @@ class ShieldAuditLogger:
 
         # Only log non-allow events to the ring buffer (saves space)
         if decision.verdict != ShieldVerdict.ALLOW:
-            details = {
+            details: Dict[str, Any] = {
                 "threats": [
                     {
                         "category": t.category.value,
@@ -135,14 +135,14 @@ class ShieldAuditLogger:
                     decision.elapsed_ms,
                 )
 
-    def get_recent(self, limit: int = 100, layer: Optional[str] = None) -> List[Dict]:
+    def get_recent(self, limit: int = 100, layer: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get recent audit events."""
         events = list(self._events)
         if layer:
             events = [e for e in events if e.layer == layer]
         return [e.to_dict() for e in events[-limit:]]
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Get overall audit statistics."""
         return {
             "counters": dict(self._counters),

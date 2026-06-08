@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import Counter, defaultdict, deque
-from typing import Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List, TYPE_CHECKING
 
 from zugashield.types import (
     AnomalyScore,
@@ -87,7 +87,7 @@ class AnomalyDetectorLayer:
     def __init__(self, config: ShieldConfig) -> None:
         self._config = config
         # Per-session event history
-        self._session_events: Dict[str, deque] = defaultdict(lambda: deque(maxlen=500))
+        self._session_events: Dict[str, deque[ThreatDetection]] = defaultdict(lambda: deque(maxlen=500))
         # Per-session anomaly scores
         self._session_scores: Dict[str, AnomalyScore] = {}
         self._stats = {"events_processed": 0, "chains_detected": 0, "escalations": 0}
@@ -184,7 +184,7 @@ class AnomalyDetectorLayer:
 
     def _check_chains(self, session_id: str) -> List[ThreatDetection]:
         """Detect multi-category attack chains."""
-        threats = []
+        threats: List[ThreatDetection] = []
         events = self._session_events[session_id]
         if len(events) < 2:
             return threats
@@ -268,7 +268,7 @@ class AnomalyDetectorLayer:
             )
         return self._session_scores[session_id]
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Return layer statistics."""
         return {
             "layer": self.LAYER_NAME,

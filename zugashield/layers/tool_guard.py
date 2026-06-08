@@ -20,7 +20,7 @@ import os
 import re
 import time
 from collections import defaultdict, deque
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from zugashield.types import (
     ThreatCategory,
@@ -108,9 +108,9 @@ class ToolGuardLayer:
         self._config = config
         self._catalog = catalog
         # Per-session rate tracking: {session_id: {tool_name: deque of timestamps}}
-        self._rate_tracker: Dict[str, Dict[str, deque]] = defaultdict(lambda: defaultdict(lambda: deque(maxlen=100)))
+        self._rate_tracker: Dict[str, Dict[str, deque[float]]] = defaultdict(lambda: defaultdict(lambda: deque(maxlen=100)))
         # Recent tool chain tracking: {session_id: deque of (tool_name, timestamp, params_hash)}
-        self._chain_tracker: Dict[str, deque] = defaultdict(lambda: deque(maxlen=50))
+        self._chain_tracker: Dict[str, deque[Tuple[str, float, str]]] = defaultdict(lambda: deque(maxlen=50))
         self._stats = {"checks": 0, "blocks": 0, "rate_limits": 0, "chain_detections": 0}
 
     async def check(
@@ -299,7 +299,7 @@ class ToolGuardLayer:
         CVE-2025-53109/53110 style attacks where symlinks point to
         sensitive files but the path string looks innocent.
         """
-        threats = []
+        threats: List[ThreatDetection] = []
 
         if tool_name not in (
             "local_read_file",
@@ -368,7 +368,7 @@ class ToolGuardLayer:
 
     def _check_ssrf(self, tool_name: str, params: Dict[str, Any]) -> List[ThreatDetection]:
         """Check for SSRF attempts in URLs."""
-        threats = []
+        threats: List[ThreatDetection] = []
 
         if tool_name not in ("browser_navigate", "web_fetch", "web_search"):
             return threats
@@ -407,7 +407,7 @@ class ToolGuardLayer:
         - Web fetch → Memory store = possible injection
         - Rapid sequential sensitive operations
         """
-        threats = []
+        threats: List[ThreatDetection] = []
         chain = self._chain_tracker[session_id]
 
         if len(chain) < 2:
@@ -459,7 +459,7 @@ class ToolGuardLayer:
 
         return threats
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Return layer statistics."""
         return {
             "layer": self.LAYER_NAME,

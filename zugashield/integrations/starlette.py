@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -67,13 +67,13 @@ class ZugaShieldMiddleware:
         shield: Any = None,
         config: Any = None,
         fail_closed: bool = False,
-        exclude_paths: Optional[tuple] = None,
+        exclude_paths: Optional[Tuple[str, ...]] = None,
     ) -> None:
         self.app = app
         self._shield_instance = shield
         self._config = config
         self._fail_closed = fail_closed
-        self._exclude_paths: tuple = tuple(exclude_paths or ())
+        self._exclude_paths: Tuple[str, ...] = tuple(exclude_paths or ())
 
     def _get_shield(self) -> Any:
         """Lazy-initialise the shield singleton on first request."""
@@ -86,7 +86,7 @@ class ZugaShieldMiddleware:
                 self._shield_instance = get_zugashield()
         return self._shield_instance
 
-    async def __call__(self, scope: Dict, receive: Callable, send: Callable) -> None:
+    async def __call__(self, scope: Dict[str, Any], receive: Callable[..., Any], send: Callable[..., Any]) -> None:
         # Only intercept HTTP — let WebSocket and lifespan pass straight through
         if scope["type"] != "http":
             await self.app(scope, receive, send)
@@ -104,7 +104,7 @@ class ZugaShieldMiddleware:
             shield = self._get_shield()
 
             # Build a minimal headers dict from the ASGI raw headers list
-            raw_headers: list = scope.get("headers", [])
+            raw_headers: List[Any] = scope.get("headers", [])
             headers: Dict[str, str] = {
                 k.decode("latin-1").lower(): v.decode("latin-1")
                 for k, v in raw_headers
@@ -143,9 +143,9 @@ class ZugaShieldMiddleware:
 
     async def _send_blocked(
         self,
-        scope: Dict,
-        receive: Callable,
-        send: Callable,
+        scope: Dict[str, Any],
+        receive: Callable[..., Any],
+        send: Callable[..., Any],
         decision: Any,
     ) -> None:
         """Send a 403 JSON response for a blocked request."""
@@ -177,9 +177,9 @@ class ZugaShieldMiddleware:
 
     async def _send_error_blocked(
         self,
-        scope: Dict,
-        receive: Callable,
-        send: Callable,
+        scope: Dict[str, Any],
+        receive: Callable[..., Any],
+        send: Callable[..., Any],
     ) -> None:
         """Send a 503 JSON response when fail_closed=True and an error occurred."""
         body = json.dumps(

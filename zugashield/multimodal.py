@@ -17,6 +17,7 @@ import logging
 import re
 import time
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from types import ModuleType
 
 from zugashield.types import (
     ThreatCategory,
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
     from zugashield.threat_catalog import ThreatCatalog
 
 # Optional Pillow import
+Image: Optional[ModuleType]
 try:
     from PIL import Image
 
@@ -168,7 +170,7 @@ class MultimodalScanner:
         """Extract and scan EXIF/metadata from image file."""
         threats = []
         try:
-            img = Image.open(image_path)
+            img = Image.open(image_path)  # type: ignore[union-attr]
             exif_data = img.info or {}
 
             # Check all string metadata fields
@@ -228,7 +230,7 @@ class MultimodalScanner:
     def _check_steganography(self, image_path: str) -> Optional[ThreatDetection]:
         """Detect 1x1 pixel images (common steganography carrier)."""
         try:
-            img = Image.open(image_path)
+            img = Image.open(image_path)  # type: ignore[union-attr]
             w, h = img.size
             img.close()
             if w == 1 and h == 1:
@@ -247,5 +249,5 @@ class MultimodalScanner:
             pass
         return None
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         return {"layer": self.LAYER_NAME, **self._stats}

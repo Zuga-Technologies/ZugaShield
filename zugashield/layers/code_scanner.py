@@ -72,7 +72,7 @@ _LANG_EXTENSION: Dict[str, str] = {
 # Each entry: (compiled_pattern, signature_id, description, level, evidence_fmt)
 # =============================================================================
 
-_CODE_PATTERNS: List[Tuple[re.Pattern, str, str, ThreatLevel]] = [
+_CODE_PATTERNS: List[Tuple[re.Pattern[str], str, str, ThreatLevel]] = [
     # CS-EXEC: Dangerous execution primitives
     (
         re.compile(
@@ -306,7 +306,7 @@ class CodeScannerLayer:
             try:
                 semgrep_threats = await self._scan_semgrep(code, language)
                 # Merge, avoiding exact duplicate signature_ids from regex pass
-                existing_sigs = {t.signature_id for t in threats if t.signature_id}
+                existing_sigs: set[str | None] = {t.signature_id for t in threats if t.signature_id}
                 for t in semgrep_threats:
                     if t.signature_id not in existing_sigs:
                         threats.append(t)

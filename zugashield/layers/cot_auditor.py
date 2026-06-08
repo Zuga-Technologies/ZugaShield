@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 # Each entry: (compiled_pattern, signature_id, description, category, level)
 # =============================================================================
 
-_DECEPTION_PATTERNS: List[Tuple[re.Pattern, str, str, ThreatCategory, ThreatLevel]] = [
+_DECEPTION_PATTERNS: List[Tuple[re.Pattern[str], str, str, ThreatCategory, ThreatLevel]] = [
     # COT-DECEPTION: Explicit deception language
     (
         re.compile(

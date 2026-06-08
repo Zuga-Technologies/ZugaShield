@@ -14,7 +14,7 @@ from __future__ import annotations
 import os
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, FrozenSet, Optional, Tuple
+from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Tuple, cast
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +139,10 @@ class ShieldConfig:
         """Load configuration from environment variables."""
         # Parse sensitive endpoints from env
         endpoints_env = os.getenv("ZUGASHIELD_SENSITIVE_ENDPOINTS")
-        endpoints: Tuple[Tuple[str, int], ...] = cls.__dataclass_fields__["sensitive_endpoints"].default
+        endpoints: Tuple[Tuple[str, int], ...] = cast(
+            Tuple[Tuple[str, int], ...],
+            cls.__dataclass_fields__["sensitive_endpoints"].default,
+        )
         if endpoints_env:
             parsed = []
             for item in endpoints_env.split(","):
@@ -151,7 +154,9 @@ class ShieldConfig:
 
         # Parse sensitive paths from env
         paths_env = os.getenv("ZUGASHIELD_SENSITIVE_PATHS")
-        paths = cls.__dataclass_fields__["sensitive_paths"].default
+        paths: Tuple[str, ...] = cast(
+            Tuple[str, ...], cls.__dataclass_fields__["sensitive_paths"].default
+        )
         if paths_env:
             paths = tuple(p.strip() for p in paths_env.split(","))
 
@@ -231,8 +236,8 @@ class _ShieldConfigBuilder:
 
     def __init__(self) -> None:
         self._kwargs: Dict[str, Any] = {}
-        self._tool_overrides: list = []
-        self._endpoints: list = []
+        self._tool_overrides: List[Tuple[str, int, bool, str]] = []
+        self._endpoints: List[Tuple[str, int]] = []
 
     def fail_closed(self, value: bool = True) -> _ShieldConfigBuilder:
         self._kwargs["fail_closed"] = value
@@ -329,6 +334,11 @@ class _ShieldConfigBuilder:
             self._kwargs["tool_risk_overrides"] = tuple(self._tool_overrides)
         if self._endpoints:
             # Merge with defaults
-            defaults = list(ShieldConfig.__dataclass_fields__["sensitive_endpoints"].default)
+            defaults = list(
+                cast(
+                    Iterable[Tuple[str, int]],
+                    ShieldConfig.__dataclass_fields__["sensitive_endpoints"].default,
+                )
+            )
             self._kwargs["sensitive_endpoints"] = tuple(defaults + self._endpoints)
         return ShieldConfig(**self._kwargs)

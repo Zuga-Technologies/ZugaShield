@@ -29,7 +29,7 @@ Usage (per-route decorator):
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ def create_shield_middleware(app: Any, shield: Any = None) -> None:
     _shield = shield or get_zugashield()
 
     class _ZugaShieldMiddleware(BaseHTTPMiddleware):
-        async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        async def dispatch(self, request: Request, call_next: Callable[..., Any]) -> Response:
             try:
                 # Extract headers as plain dict
                 headers: Dict[str, str] = dict(request.headers)
@@ -112,7 +112,7 @@ def create_shield_middleware(app: Any, shield: Any = None) -> None:
             except Exception:
                 logger.exception("[ZugaShield] Middleware error — fail-open for request")
 
-            return await call_next(request)
+            return cast(Response, await call_next(request))
 
     app.add_middleware(_ZugaShieldMiddleware)
     logger.info("[ZugaShield] FastAPI perimeter middleware attached")
@@ -124,7 +124,7 @@ def create_shield_middleware(app: Any, shield: Any = None) -> None:
 
 
 def create_dashboard_router(
-    shield_getter: Callable,
+    shield_getter: Callable[..., Any],
     prefix: str = "",
 ) -> "APIRouter":
     """
@@ -162,7 +162,7 @@ def create_dashboard_router(
     # GET /status
     # ------------------------------------------------------------------
     @router.get("/status")
-    async def shield_status():
+    async def shield_status() -> Any:
         """Return whether the shield is enabled, and its layer configuration."""
         shield = shield_getter()
         state = shield.get_version_state()
@@ -180,7 +180,7 @@ def create_dashboard_router(
     async def shield_threats(
         limit: int = Query(50, ge=1, le=500),
         layer: Optional[str] = Query(None),
-    ):
+    ) -> Any:
         """Return recent threat detections (blocks and quarantines only)."""
         shield = shield_getter()
         events = shield.get_audit_log(limit=limit, layer=layer)
@@ -197,7 +197,7 @@ def create_dashboard_router(
     @router.get("/anomaly-score")
     async def shield_anomaly_score(
         session_id: str = Query("default"),
-    ):
+    ) -> Any:
         """Return the anomaly score for a session."""
         shield = shield_getter()
         score = shield.get_session_risk(session_id=session_id)
@@ -213,7 +213,7 @@ def create_dashboard_router(
     # GET /dashboard
     # ------------------------------------------------------------------
     @router.get("/dashboard")
-    async def shield_dashboard():
+    async def shield_dashboard() -> Any:
         """Return aggregated dashboard data: catalog stats, audit counters, per-layer stats."""
         shield = shield_getter()
         return shield.get_dashboard_data()
@@ -225,7 +225,7 @@ def create_dashboard_router(
     async def shield_audit(
         limit: int = Query(100, ge=1, le=1000),
         layer: Optional[str] = Query(None),
-    ):
+    ) -> Any:
         """Return the raw audit log with optional filtering by layer."""
         shield = shield_getter()
         return {
@@ -247,7 +247,7 @@ create_shield_router = create_dashboard_router
 def shield_protect(
     shield: Any = None,
     check_body: bool = False,
-):
+) -> Callable[..., Any]:
     """
     Decorator that runs ZugaShield perimeter checks on individual FastAPI routes.
 
@@ -270,7 +270,7 @@ def shield_protect(
             "Install with: pip install zugashield[fastapi]"
         )
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         import functools
         import inspect
 
@@ -330,7 +330,7 @@ def shield_protect(
                 except Exception:
                     logger.exception(
                         "[ZugaShield] @shield_protect error — fail-open for route %s",
-                        getattr(request, "url", {}).path if request else "unknown",
+                        cast(Any, getattr(request, "url", {})).path if request else "unknown",
                     )
 
             # Invoke the original route handler

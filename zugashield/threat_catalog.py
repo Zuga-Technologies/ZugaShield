@@ -24,7 +24,7 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from zugashield.types import (
     ThreatCategory,
@@ -80,7 +80,7 @@ class ThreatSignature:
     false_positive_rate: float = 0.01
     references: List[str] = field(default_factory=list)
     enabled: bool = True
-    _compiled: List[re.Pattern] = field(default_factory=list, repr=False)
+    _compiled: List[re.Pattern[str]] = field(default_factory=list, repr=False)
 
     def __post_init__(self) -> None:
         """Compile regex patterns on creation for fast matching."""
@@ -182,18 +182,18 @@ class ThreatCatalog:
             Number of signatures loaded.
         """
         loaded = 0
-        dir_path = Path(dir_path)
+        path = Path(dir_path)
 
-        if not dir_path.exists():
-            logger.warning("[ThreatCatalog] Signatures dir not found: %s", dir_path)
+        if not path.exists():
+            logger.warning("[ThreatCatalog] Signatures dir not found: %s", path)
             return 0
 
         # Verify integrity before loading (Fix #12)
         if self._verify_integrity:
-            self._verify_signature_integrity(dir_path)
+            self._verify_signature_integrity(path)
 
         # Load version info if present
-        version_file = dir_path / "catalog_version.json"
+        version_file = path / "catalog_version.json"
         if version_file.exists():
             try:
                 with open(version_file, "r", encoding="utf-8") as f:
@@ -204,7 +204,7 @@ class ThreatCatalog:
                 logger.warning("[ThreatCatalog] Failed to read version file: %s", e)
 
         # Load each category file
-        for json_file in sorted(dir_path.glob("*.json")):
+        for json_file in sorted(path.glob("*.json")):
             if json_file.name in ("catalog_version.json", "integrity.json"):
                 continue
             try:
@@ -406,7 +406,7 @@ class ThreatCatalog:
         """Get all signatures for a category."""
         return self._signatures.get(category, [])
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Get catalog statistics."""
         return {
             "version": self._version,

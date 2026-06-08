@@ -88,7 +88,7 @@ class MemorySentinelLayer:
         self._config = config
         self._catalog = catalog
         # Rate tracking: {user_id: deque of timestamps}
-        self._write_tracker: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self._write_tracker: Dict[str, deque[float]] = defaultdict(lambda: deque(maxlen=100))
         self._stats = {"writes_checked": 0, "reads_checked": 0, "blocked": 0, "flagged": 0}
 
     async def check_write(
@@ -513,7 +513,7 @@ class MemorySentinelLayer:
             return MemoryTrust.VERIFIED
         return MemoryTrust.UNKNOWN
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Return layer statistics."""
         return {
             "layer": self.LAYER_NAME,
