@@ -33,7 +33,7 @@ Usage (middleware-style wrapping of an MCP client):
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 logger = logging.getLogger(__name__)
 
@@ -229,8 +229,8 @@ class ZugaShieldMCPInterceptor:
     def _get_tool_name(tool: Any) -> str:
         """Extract tool name from a dict or object."""
         if isinstance(tool, dict):
-            return tool.get("name", "")
-        return getattr(tool, "name", "")
+            return cast(str, tool.get("name", ""))
+        return cast(str, getattr(tool, "name", ""))
 
     @staticmethod
     def _normalise_tool(tool: Any) -> Dict[str, Any]:
@@ -258,14 +258,14 @@ class ZugaShieldMCPInterceptor:
             }
         """
         if isinstance(tool, dict):
-            result = dict(tool)
+            result: Dict[str, Any] = dict(tool)
             # MCP uses "inputSchema"; ZugaShield expects "input_schema"
             if "inputSchema" in result and "input_schema" not in result:
                 result["input_schema"] = result["inputSchema"]
             return result
 
         # Object-style (e.g. mcp.types.Tool)
-        result: Dict[str, Any] = {}
+        result = {}
         result["name"] = getattr(tool, "name", "unknown")
         result["description"] = getattr(tool, "description", "")
 
@@ -333,7 +333,7 @@ def shield_wrap_mcp_client(
         original_call = client.call_tool
 
         @functools.wraps(original_call)
-        async def _safe_call_tool(name: str, arguments: Optional[Dict] = None, *args: Any, **kwargs: Any) -> Any:
+        async def _safe_call_tool(name: str, arguments: Optional[Dict[str, Any]] = None, *args: Any, **kwargs: Any) -> Any:
             arguments = arguments or {}
             decision = await interceptor.check_call(name, arguments)
             if decision.is_blocked:

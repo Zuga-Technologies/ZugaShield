@@ -20,7 +20,7 @@ import logging
 import math
 import re
 import time
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from zugashield.types import (
     ThreatCategory,
@@ -119,7 +119,7 @@ class ExfiltrationGuardLayer:
     async def check(
         self,
         output: str,
-        context: Optional[Dict] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ShieldDecision:
         """
         Check output content for data leakage.
@@ -427,7 +427,7 @@ class ExfiltrationGuardLayer:
             )
         return None
 
-    def _match_egress_domain(self, domain: str, allowed: tuple) -> bool:
+    def _match_egress_domain(self, domain: str, allowed: Tuple[str, ...]) -> bool:
         """Match domain against allowlist with explicit wildcard syntax.
 
         Exact match: "api.example.com" matches only "api.example.com"
@@ -464,7 +464,7 @@ class ExfiltrationGuardLayer:
                     result = pattern.sub("[REDACTED]", result)
         return result
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Return layer statistics."""
         return {
             "layer": self.LAYER_NAME,

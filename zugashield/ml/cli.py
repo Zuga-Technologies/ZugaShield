@@ -30,6 +30,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
+from typing import cast
 
 
 _DEFAULT_MODEL_DIR = "~/.zugashield/models"
@@ -131,7 +132,7 @@ def cmd_download(args: argparse.Namespace) -> None:
     print("  Downloading tokenizer.json...")
     try:
         tok_path = hf_hub_download(
-            repo_id=hf_repo,
+            repo_id=cast(str, hf_repo),
             filename="tokenizer.json",
         )
         tokenizer_dest = model_dir / "tokenizer.json"

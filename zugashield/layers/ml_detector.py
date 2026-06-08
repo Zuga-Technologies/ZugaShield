@@ -35,7 +35,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, cast, TYPE_CHECKING
 
 from zugashield.types import (
     ThreatCategory,
@@ -247,12 +247,12 @@ class MLDetectorLayer:
         # v2.0 bundle format
         if isinstance(self._tfidf_model, dict):
             meta = self._tfidf_model.get("__zugashield_meta__", {})
-            return meta.get("version")
+            return cast(Optional[str], meta.get("version"))
 
         # v1.0 pipeline format — check for attached metadata
         meta = getattr(self._tfidf_model, "__zugashield_meta__", None)
         if meta:
-            return meta.get("version")
+            return cast(Optional[str], meta.get("version"))
 
         return None
 

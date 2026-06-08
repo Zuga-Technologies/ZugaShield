@@ -65,7 +65,7 @@ except ImportError:
         async def on_chain_error(self, *args: Any, **kwargs: Any) -> None: ...
 
 
-class ZugaShieldCallbackHandler(_LCBase):
+class ZugaShieldCallbackHandler(_LCBase):  # type: ignore[misc]
     """
     LangChain async callback handler that runs ZugaShield checks at each
     stage of the LLM pipeline.

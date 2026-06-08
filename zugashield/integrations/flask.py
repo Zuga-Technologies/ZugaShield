@@ -105,7 +105,7 @@ def create_flask_extension(
             """Register hooks on a Flask application (init_app pattern)."""
 
             @flask_app.before_request
-            def _zugashield_before_request():
+            def _zugashield_before_request() -> Any:
                 _shield = self._get_shield()
                 try:
                     headers = {
@@ -158,7 +158,7 @@ def create_flask_extension(
                     g.shield_decision = None
 
             @flask_app.after_request
-            def _zugashield_after_request(response):
+            def _zugashield_after_request(response: Any) -> Any:
                 # Attach a header so clients know the shield ran
                 decision = getattr(g, "shield_decision", None)
                 if decision is not None:
@@ -175,7 +175,7 @@ def create_flask_extension(
 
 def create_dashboard_blueprint(
     prefix: str = "/shield",
-    shield_getter: Optional[Callable] = None,
+    shield_getter: Optional[Callable[..., Any]] = None,
 ) -> Any:
     """
     Create a Flask Blueprint exposing the ZugaShield dashboard API.
@@ -216,7 +216,7 @@ def create_dashboard_blueprint(
     bp = Blueprint("zugashield", __name__, url_prefix=prefix)
 
     @bp.get("/status")
-    def status():
+    def status() -> Any:
         """Return shield enabled/disabled + layer configuration."""
         shield = _get_shield()
         state = shield.get_version_state()
@@ -230,7 +230,7 @@ def create_dashboard_blueprint(
         )
 
     @bp.get("/threats")
-    def threats():
+    def threats() -> Any:
         """Return recent threat detections."""
         shield = _get_shield()
         limit = flask_request.args.get("limit", 50, type=int)
@@ -240,7 +240,7 @@ def create_dashboard_blueprint(
         return jsonify({"count": len(threat_events), "threats": threat_events})
 
     @bp.get("/anomaly-score")
-    def anomaly_score():
+    def anomaly_score() -> Any:
         """Return anomaly score for a session."""
         shield = _get_shield()
         session_id = flask_request.args.get("session_id", "default")
@@ -256,13 +256,13 @@ def create_dashboard_blueprint(
         )
 
     @bp.get("/dashboard")
-    def dashboard():
+    def dashboard() -> Any:
         """Return aggregated dashboard data."""
         shield = _get_shield()
         return jsonify(shield.get_dashboard_data())
 
     @bp.get("/audit")
-    def audit():
+    def audit() -> Any:
         """Return the raw audit log."""
         shield = _get_shield()
         limit = flask_request.args.get("limit", 100, type=int)

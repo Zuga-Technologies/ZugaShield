@@ -29,6 +29,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def distill(
@@ -119,7 +120,7 @@ def distill(
 
     # Step 2: Pseudo-label with DeBERTa
     print(f"Pseudo-labeling {len(unlabeled)} samples with DeBERTa...")
-    pseudo_labeled: list[dict] = []
+    pseudo_labeled: list[dict[str, Any]] = []
     kept = 0
     skipped = 0
 

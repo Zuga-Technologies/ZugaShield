@@ -34,7 +34,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar, cast
 
 from zugashield._version import __version__
 from zugashield.audit import ShieldAuditLogger
@@ -95,8 +95,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from zugashield.feed.updater import SignatureUpdater
 
-def _run_sync(coro):
+_T = TypeVar("_T")
+
+
+def _run_sync(coro: Coroutine[Any, Any, _T]) -> _T:
     """Run a coroutine synchronously, even from inside a running event loop."""
     try:
         asyncio.get_running_loop()
@@ -110,7 +115,7 @@ def _run_sync(coro):
 
 # Module-level singleton
 _singleton: Optional[ZugaShield] = None
-_approval_provider: Optional[Callable] = None
+_approval_provider: Optional[Callable[..., Any]] = None
 
 # Layers that ALWAYS fail closed regardless of the config setting
 _ALWAYS_FAIL_CLOSED = {"tool_guard", "wallet_fortress"}
@@ -128,10 +133,10 @@ class ZugaShield:
         self._config = config or ShieldConfig.from_env()
         self._catalog = ThreatCatalog(verify_integrity=self._config.verify_signatures)
         self._audit = ShieldAuditLogger()
-        self._threat_hooks: List[Tuple[str, Callable]] = []
-        self._block_hooks: List[Callable] = []
+        self._threat_hooks: List[Tuple[str, Callable[..., Any]]] = []
+        self._block_hooks: List[Callable[..., Any]] = []
         self._layers: Dict[str, Any] = {}
-        self._updater = None
+        self._updater: Optional[SignatureUpdater] = None
         self._init_layers()
         self._init_feed()
 
@@ -168,7 +173,7 @@ class ZugaShield:
             self._layers["llm_judge"] = LLMJudgeLayer(cfg)
 
         # Optional layers (may not be installable)
-        _optional = [
+        _optional: List[Tuple[str, bool, bool, Callable[[], Any]]] = [
             ("ml_detector", cfg.ml_detector_enabled, _HAS_ML_DETECTOR, lambda: MLDetectorLayer(cfg)),
             ("code_scanner", cfg.code_scanner_enabled, _HAS_CODE_SCANNER, lambda: CodeScannerLayer(cfg)),
             ("cot_auditor", cfg.cot_auditor_enabled, _HAS_COT_AUDITOR, lambda: CoTAuditorLayer(cfg)),
@@ -222,32 +227,32 @@ class ZugaShield:
 
     # Layer accessors — used by tests and advanced callers
     @property
-    def perimeter(self):
-        return self._layers.get("perimeter")
+    def perimeter(self) -> Optional[PerimeterLayer]:
+        return cast(Optional[PerimeterLayer], self._layers.get("perimeter"))
 
     @property
-    def prompt_armor(self):
-        return self._layers.get("prompt_armor")
+    def prompt_armor(self) -> Optional[PromptArmorLayer]:
+        return cast(Optional[PromptArmorLayer], self._layers.get("prompt_armor"))
 
     @property
-    def tool_guard(self):
-        return self._layers.get("tool_guard")
+    def tool_guard(self) -> Optional[ToolGuardLayer]:
+        return cast(Optional[ToolGuardLayer], self._layers.get("tool_guard"))
 
     @property
-    def memory_sentinel(self):
-        return self._layers.get("memory_sentinel")
+    def memory_sentinel(self) -> Optional[MemorySentinelLayer]:
+        return cast(Optional[MemorySentinelLayer], self._layers.get("memory_sentinel"))
 
     @property
-    def exfiltration_guard(self):
-        return self._layers.get("exfiltration_guard")
+    def exfiltration_guard(self) -> Optional[ExfiltrationGuardLayer]:
+        return cast(Optional[ExfiltrationGuardLayer], self._layers.get("exfiltration_guard"))
 
     @property
-    def anomaly_detector(self):
-        return self._layers.get("anomaly_detector")
+    def anomaly_detector(self) -> Optional[AnomalyDetectorLayer]:
+        return cast(Optional[AnomalyDetectorLayer], self._layers.get("anomaly_detector"))
 
     @property
-    def wallet_fortress(self):
-        return self._layers.get("wallet_fortress")
+    def wallet_fortress(self) -> Optional[WalletFortressLayer]:
+        return cast(Optional[WalletFortressLayer], self._layers.get("wallet_fortress"))
 
     # ---------------------------------------------------------------
     # Core check methods
@@ -272,7 +277,7 @@ class ZugaShield:
             return allow_decision("perimeter")
 
         try:
-            decision = await layer.check(
+            decision: ShieldDecision = await layer.check(
                 path=path,
                 method=method,
                 content_length=content_length,
@@ -291,7 +296,7 @@ class ZugaShield:
     async def check_prompt(
         self,
         text: str,
-        context: Optional[Dict] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ShieldDecision:
         """Check a prompt through prompt armor (L2), ML detector, and anomaly gate (L6)."""
         if not self.enabled:
@@ -307,7 +312,7 @@ class ZugaShield:
         layer = self._layers.get("prompt_armor")
         if layer:
             try:
-                decision = await layer.check(text, context=ctx)
+                decision: ShieldDecision = await layer.check(text, context=ctx)
             except Exception as e:
                 decision = self._handle_layer_error("prompt_armor", e)
             if decision.is_blocked:
@@ -356,7 +361,7 @@ class ZugaShield:
     async def check_output(
         self,
         text: str,
-        context: Optional[Dict] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ShieldDecision:
         """Check AI output through exfiltration guard (L5) and CoT auditor."""
         if not self.enabled:
@@ -369,7 +374,7 @@ class ZugaShield:
         layer = self._layers.get("exfiltration_guard")
         if layer:
             try:
-                decision = await layer.check(text, context=ctx)
+                decision: ShieldDecision = await layer.check(text, context=ctx)
             except Exception as e:
                 decision = self._handle_layer_error("exfiltration_guard", e)
             if decision.is_blocked:
@@ -413,7 +418,7 @@ class ZugaShield:
         layer = self._layers.get("tool_guard")
         if layer:
             try:
-                decision = await layer.check(name, params, session_id=session_id)
+                decision: ShieldDecision = await layer.check(name, params, session_id=session_id)
             except Exception as e:
                 decision = self._handle_layer_error("tool_guard", e, force_block=True)
             if decision.is_blocked:
@@ -458,7 +463,7 @@ class ZugaShield:
             return allow_decision("memory_sentinel")
 
         try:
-            decision = await layer.check_write(
+            decision: ShieldDecision = await layer.check_write(
                 content, memory_type=memory_type, source=source, tags=tags,
             )
         except Exception as e:
@@ -483,7 +488,7 @@ class ZugaShield:
             return allow_decision("memory_sentinel")
 
         try:
-            decision = await layer.check_recall(memories)
+            decision: ShieldDecision = await layer.check_recall(memories)
         except Exception as e:
             decision = self._handle_layer_error("memory_sentinel", e)
 
@@ -511,7 +516,7 @@ class ZugaShield:
             return allow_decision("wallet_fortress")
 
         try:
-            decision = await layer.check(
+            decision: ShieldDecision = await layer.check(
                 tx_type=tx_type,
                 to_address=to_address,
                 amount=amount,
@@ -542,7 +547,7 @@ class ZugaShield:
             return allow_decision("code_scanner")
 
         try:
-            decision = await layer.check(code, language=language)
+            decision: ShieldDecision = await layer.check(code, language=language)
         except Exception as e:
             decision = self._handle_layer_error("code_scanner", e)
 
@@ -566,7 +571,7 @@ class ZugaShield:
             return allow_decision("cot_auditor")
 
         try:
-            decision = await layer.check(trace=trace, stated_goal=stated_goal)
+            decision: ShieldDecision = await layer.check(trace=trace, stated_goal=stated_goal)
         except Exception as e:
             decision = self._handle_layer_error("cot_auditor", e)
 
@@ -591,7 +596,7 @@ class ZugaShield:
             return allow_decision("memory_sentinel")
 
         try:
-            decision = await layer.check_document(content, source=source, document_type=document_type)
+            decision: ShieldDecision = await layer.check_document(content, source=source, document_type=document_type)
         except Exception as e:
             decision = self._handle_layer_error("memory_sentinel", e)
 
@@ -624,7 +629,7 @@ class ZugaShield:
         if not layer or not self.enabled:
             return tools
         clean, _threats = layer.scan_definitions(tools, server_id=server_id)
-        return clean
+        return cast(List[Dict[str, Any]], clean)
 
     # ---------------------------------------------------------------
     # Query / dashboard
@@ -634,10 +639,10 @@ class ZugaShield:
         """Get the anomaly score for a session."""
         layer = self._layers.get("anomaly_detector")
         if layer:
-            return layer.get_session_score(session_id)
+            return cast(AnomalyScore, layer.get_session_score(session_id))
         return AnomalyScore()
 
-    def get_audit_log(self, limit: int = 100, layer: Optional[str] = None) -> List[Dict]:
+    def get_audit_log(self, limit: int = 100, layer: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get recent audit events, optionally filtered by layer."""
         return self._audit.get_recent(limit=limit, layer=layer)
 
@@ -681,14 +686,14 @@ class ZugaShield:
     # Event hooks
     # ---------------------------------------------------------------
 
-    def on_threat(self, min_level: str = "high") -> Callable:
+    def on_threat(self, min_level: str = "high") -> Callable[..., Any]:
         """Decorator: fire callback when a threat >= min_level is detected."""
-        def decorator(fn: Callable) -> Callable:
+        def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
             self._threat_hooks.append((min_level, fn))
             return fn
         return decorator
 
-    def on_block(self, fn: Callable) -> Callable:
+    def on_block(self, fn: Callable[..., Any]) -> Callable[..., Any]:
         """Decorator: fire callback on every BLOCK or QUARANTINE verdict."""
         self._block_hooks.append(fn)
         return fn
@@ -719,11 +724,11 @@ class ZugaShield:
     # Sync wrappers (Flask / Django / scripts)
     # ---------------------------------------------------------------
 
-    def check_prompt_sync(self, text: str, context: Optional[Dict] = None) -> ShieldDecision:
+    def check_prompt_sync(self, text: str, context: Optional[Dict[str, Any]] = None) -> ShieldDecision:
         """Synchronous check_prompt."""
         return _run_sync(self.check_prompt(text, context=context))
 
-    def check_output_sync(self, text: str, context: Optional[Dict] = None) -> ShieldDecision:
+    def check_output_sync(self, text: str, context: Optional[Dict[str, Any]] = None) -> ShieldDecision:
         """Synchronous check_output."""
         return _run_sync(self.check_output(text, context=context))
 
@@ -881,7 +886,7 @@ def reset_zugashield() -> None:
     _singleton = None
 
 
-def set_approval_provider(provider: Callable) -> None:
+def set_approval_provider(provider: Callable[..., Any]) -> None:
     """Set the human-in-the-loop approval provider for CHALLENGE verdicts."""
     global _approval_provider
     _approval_provider = provider

@@ -78,7 +78,7 @@ except ImportError:
         def end_trace(self, *args: Any, **kwargs: Any) -> None: ...
 
 
-class ZugaShieldCallbackHandler(_LIBase):
+class ZugaShieldCallbackHandler(_LIBase):  # type: ignore[misc]
     """
     LlamaIndex callback handler that runs ZugaShield checks at key pipeline stages.
 

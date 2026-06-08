@@ -26,7 +26,7 @@ import unicodedata
 import uuid
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from zugashield.types import (
     ThreatCategory,
@@ -110,7 +110,7 @@ _ESCALATION_TRANSITIONS = re.compile(
 class _SessionEscalation:
     """Track per-session escalation for crescendo detection."""
 
-    scores: deque = field(default_factory=lambda: deque(maxlen=20))
+    scores: deque[float] = field(default_factory=lambda: deque(maxlen=20))
     cumulative: float = 0.0
     last_update: float = 0.0
     transition_count: int = 0
@@ -122,7 +122,7 @@ class _SessionEscalation:
 
 # These are the highest-confidence, lowest-false-positive patterns
 # that catch the vast majority of injection attempts.
-_FAST_PATTERNS: List[tuple] = [
+_FAST_PATTERNS: List[Tuple[re.Pattern[str], str, str, ThreatLevel]] = [
     # (compiled_regex, signature_id, description, severity)
     (
         re.compile(
@@ -275,7 +275,7 @@ class PromptArmorLayer:
     async def check(
         self,
         text: str,
-        context: Optional[Dict] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ShieldDecision:
         """
         Check input text for prompt injection and related attacks.
@@ -1144,7 +1144,7 @@ class PromptArmorLayer:
         but visible to the LLM in its context window.
         Only runs if text contains HTML tags.
         """
-        threats = []
+        threats: List[ThreatDetection] = []
 
         # Only scan if text contains HTML-like content
         if "<" not in text or ">" not in text:
@@ -1207,7 +1207,7 @@ class PromptArmorLayer:
 
         return f'<EXTERNAL_CONTENT source="{source}" trust="{trust}">\n{content}\n</EXTERNAL_CONTENT>'
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Return layer statistics."""
         return {
             "layer": self.LAYER_NAME,

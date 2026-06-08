@@ -18,6 +18,8 @@ Available integrations:
 
 from __future__ import annotations
 
+from typing import Any
+
 # Approval provider is always available (zero dependencies)
 from zugashield.integrations.approval import ApprovalProvider, NoOpApprovalProvider
 
@@ -48,7 +50,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     """
     Lazy loader — only imports a sub-module's symbols when first accessed.
     This keeps import time fast and avoids ImportError for missing optional

@@ -36,9 +36,10 @@ import argparse
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 
-def _load_original_datasets(load_dataset) -> tuple[list[str], list[int]]:
+def _load_original_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
     """Load the 5 original training datasets."""
     texts: list[str] = []
     labels: list[int] = []
@@ -116,7 +117,7 @@ def _load_original_datasets(load_dataset) -> tuple[list[str], list[int]]:
     return texts, labels
 
 
-def _load_new_datasets(load_dataset) -> tuple[list[str], list[int]]:
+def _load_new_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
     """Load the 4 new training datasets for improved semantic coverage."""
     texts: list[str] = []
     labels: list[int] = []

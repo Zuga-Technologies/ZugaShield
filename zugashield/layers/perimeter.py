@@ -18,7 +18,7 @@ import hashlib
 import logging
 import time
 from collections import defaultdict, deque
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from zugashield.types import (
     ThreatCategory,
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Global rate tracker keyed by hash of (client_ip + user_agent): {endpoint: deque of timestamps}
-_global_rate_tracker: Dict[str, Dict[str, deque]] = defaultdict(lambda: defaultdict(lambda: deque(maxlen=200)))
+_global_rate_tracker: Dict[str, Dict[str, deque[float]]] = defaultdict(lambda: defaultdict(lambda: deque(maxlen=200)))
 
 
 class PerimeterLayer:
@@ -53,7 +53,7 @@ class PerimeterLayer:
         self._config = config
         self._catalog = catalog
         # Rate tracking: {client_id: {endpoint: deque of timestamps}}
-        self._rate_tracker: Dict[str, Dict[str, deque]] = defaultdict(lambda: defaultdict(lambda: deque(maxlen=200)))
+        self._rate_tracker: Dict[str, Dict[str, deque[float]]] = defaultdict(lambda: defaultdict(lambda: deque(maxlen=200)))
         self._stats = {"checks": 0, "blocked": 0, "rate_limits": 0, "oversized": 0, "global_rate_limits": 0}
 
     async def check(
@@ -256,7 +256,7 @@ class PerimeterLayer:
 
         return threats
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Return layer statistics."""
         return {
             "layer": self.LAYER_NAME,

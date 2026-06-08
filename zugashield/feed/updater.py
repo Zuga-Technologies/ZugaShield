@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import random
 import threading
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from zugashield.config import ShieldConfig
@@ -100,7 +100,7 @@ class SignatureUpdater(threading.Thread):
             count,
         )
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, Any]:
         """Return updater status for dashboard."""
         return {
             "running": self.is_alive(),
