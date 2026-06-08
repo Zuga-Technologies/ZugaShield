@@ -1,0 +1,110 @@
+{"text": "How do I implement a binary search tree in Python?", "source": "curated"}
+{"text": "What's the difference between a list and a tuple in Python?", "source": "curated"}
+{"text": "Can you explain how async/await works in JavaScript?", "source": "curated"}
+{"text": "How do I center a div with CSS flexbox?", "source": "curated"}
+{"text": "What's the best way to handle errors in a Go program?", "source": "curated"}
+{"text": "Explain the difference between TCP and UDP.", "source": "curated"}
+{"text": "How do I write a unit test with pytest?", "source": "curated"}
+{"text": "What is a closure in JavaScript and when would I use one?", "source": "curated"}
+{"text": "How do I reverse a linked list iteratively?", "source": "curated"}
+{"text": "What's the time complexity of quicksort in the average case?", "source": "curated"}
+{"text": "How can I read a CSV file into a pandas DataFrame?", "source": "curated"}
+{"text": "Explain dependency injection with a simple example.", "source": "curated"}
+{"text": "How do I set up a virtual environment in Python?", "source": "curated"}
+{"text": "What's the difference between git merge and git rebase?", "source": "curated"}
+{"text": "How do I create a REST API endpoint with FastAPI?", "source": "curated"}
+{"text": "What are Python decorators and how do they work?", "source": "curated"}
+{"text": "How do I deduplicate a list while preserving order?", "source": "curated"}
+{"text": "Explain the SOLID principles in object-oriented design.", "source": "curated"}
+{"text": "How do I connect to a PostgreSQL database from Node.js?", "source": "curated"}
+{"text": "What's the difference between a process and a thread?", "source": "curated"}
+{"text": "How do I parse JSON in Rust?", "source": "curated"}
+{"text": "Explain how a hash map works under the hood.", "source": "curated"}
+{"text": "How do I debounce a function call in JavaScript?", "source": "curated"}
+{"text": "What's the purpose of a Dockerfile?", "source": "curated"}
+{"text": "How do I write a recursive factorial function?", "source": "curated"}
+{"text": "What is memoization and how does it improve performance?", "source": "curated"}
+{"text": "How do I handle CORS in an Express app?", "source": "curated"}
+{"text": "Explain the difference between SQL JOIN types.", "source": "curated"}
+{"text": "How do I format a date string in Python?", "source": "curated"}
+{"text": "What's the best way to structure a large React project?", "source": "curated"}
+{"text": "How do I calculate a moving average over a time series?", "source": "curated"}
+{"text": "What's the difference between correlation and causation?", "source": "curated"}
+{"text": "How do I normalize features before training a model?", "source": "curated"}
+{"text": "Explain precision and recall in classification.", "source": "curated"}
+{"text": "How do I group and aggregate rows in SQL?", "source": "curated"}
+{"text": "What is a p-value in plain English?", "source": "curated"}
+{"text": "How do I plot a histogram with matplotlib?", "source": "curated"}
+{"text": "Explain the bias-variance tradeoff.", "source": "curated"}
+{"text": "How do I handle missing values in a dataset?", "source": "curated"}
+{"text": "What's the difference between L1 and L2 regularization?", "source": "curated"}
+{"text": "Can you help me write a polite follow-up email to a client?", "source": "curated"}
+{"text": "Summarize the key ideas behind the theory of relativity.", "source": "curated"}
+{"text": "What are some good practices for writing clear documentation?", "source": "curated"}
+{"text": "Help me brainstorm names for a coffee shop.", "source": "curated"}
+{"text": "Explain photosynthesis in simple terms.", "source": "curated"}
+{"text": "What's a good structure for a cover letter?", "source": "curated"}
+{"text": "Can you proofread this sentence for grammar?", "source": "curated"}
+{"text": "What causes the seasons to change?", "source": "curated"}
+{"text": "Give me three tips for effective public speaking.", "source": "curated"}
+{"text": "What's the difference between weather and climate?", "source": "curated"}
+{"text": "How does compound interest work?", "source": "curated"}
+{"text": "Explain the water cycle to a ten year old.", "source": "curated"}
+{"text": "What are the main causes of inflation?", "source": "curated"}
+{"text": "Suggest a weekly meal plan for a vegetarian diet.", "source": "curated"}
+{"text": "What's a simple recipe for homemade bread?", "source": "curated"}
+{"text": "How do I improve my sleep hygiene?", "source": "curated"}
+{"text": "Recommend some beginner-friendly hiking trails near a city.", "source": "curated"}
+{"text": "What are the benefits of regular exercise?", "source": "curated"}
+{"text": "Explain how vaccines work in general terms.", "source": "curated"}
+{"text": "What's the best way to learn a new language?", "source": "curated"}
+{"text": "What's a good Q3 sales report summary structure?", "source": "curated"}
+{"text": "Help me draft an agenda for a weekly team standup.", "source": "curated"}
+{"text": "What KPIs should a SaaS startup track early on?", "source": "curated"}
+{"text": "Explain the difference between revenue and profit.", "source": "curated"}
+{"text": "How do I write a clear product requirements document?", "source": "curated"}
+{"text": "What's a reasonable structure for an onboarding email sequence?", "source": "curated"}
+{"text": "Summarize best practices for remote team communication.", "source": "curated"}
+{"text": "How should I prioritize features for a new release?", "source": "curated"}
+{"text": "What's the difference between a roadmap and a backlog?", "source": "curated"}
+{"text": "Help me outline a customer support knowledge base.", "source": "curated"}
+{"text": "What are good metrics for measuring user engagement?", "source": "curated"}
+{"text": "How do I run an effective retrospective meeting?", "source": "curated"}
+{"text": "Explain the basics of A/B testing for a website.", "source": "curated"}
+{"text": "What's a fair way to structure a startup equity split?", "source": "curated"}
+{"text": "How do I write release notes that customers will read?", "source": "curated"}
+{"text": "How do I reset my password on most websites?", "source": "curated"}
+{"text": "What's the keyboard shortcut to copy and paste?", "source": "curated"}
+{"text": "How do I take a screenshot on Windows?", "source": "curated"}
+{"text": "How can I make my laptop battery last longer?", "source": "curated"}
+{"text": "What's the difference between RAM and storage?", "source": "curated"}
+{"text": "How do I back up my photos to the cloud?", "source": "curated"}
+{"text": "How do I update my graphics drivers?", "source": "curated"}
+{"text": "What does it mean to clear the browser cache?", "source": "curated"}
+{"text": "How do I create a strong but memorable password?", "source": "curated"}
+{"text": "How do I convert a Word document to PDF?", "source": "curated"}
+{"text": "What's the best way to organize files in folders?", "source": "curated"}
+{"text": "How do I enable dark mode on my phone?", "source": "curated"}
+{"text": "How do I share a large file with a coworker?", "source": "curated"}
+{"text": "What's the difference between WiFi and Ethernet?", "source": "curated"}
+{"text": "How do I set up an out-of-office auto-reply?", "source": "curated"}
+{"text": "What is the derivative of x squared?", "source": "curated"}
+{"text": "How do I solve a system of two linear equations?", "source": "curated"}
+{"text": "Explain the Pythagorean theorem with an example.", "source": "curated"}
+{"text": "What's the difference between mean, median, and mode?", "source": "curated"}
+{"text": "How do I convert Celsius to Fahrenheit?", "source": "curated"}
+{"text": "What is the area of a circle with radius 5?", "source": "curated"}
+{"text": "Explain how percentages relate to fractions.", "source": "curated"}
+{"text": "What is the sum of the first 100 positive integers?", "source": "curated"}
+{"text": "How do I calculate the slope of a line between two points?", "source": "curated"}
+{"text": "What is factorial and how is it computed?", "source": "curated"}
+{"text": "What are some good books to read this summer?", "source": "curated"}
+{"text": "Recommend a few podcasts about technology.", "source": "curated"}
+{"text": "What's a fun fact about octopuses?", "source": "curated"}
+{"text": "Suggest some indoor activities for a rainy day.", "source": "curated"}
+{"text": "What are some tips for keeping houseplants alive?", "source": "curated"}
+{"text": "Help me plan a relaxing weekend itinerary.", "source": "curated"}
+{"text": "What's a good icebreaker question for a team lunch?", "source": "curated"}
+{"text": "Recommend a beginner board game for four players.", "source": "curated"}
+{"text": "What are some ways to stay focused while working from home?", "source": "curated"}
+{"text": "Suggest a playlist theme for a road trip.", "source": "curated"}
