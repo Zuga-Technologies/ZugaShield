@@ -359,7 +359,7 @@ def _evaluate_coverage(model_path: str) -> dict[str, Any]:
     shield = ZugaShield(config)
 
     # Force-load the benchmark model
-    ml_layer = shield._ml_detector  # type: ignore[attr-defined]
+    ml_layer = shield._layers.get("ml_detector")
     if ml_layer is None:
         return {"error": "ML layer not found"}
 
