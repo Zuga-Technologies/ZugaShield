@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#16233f"/>
+      <stop offset="100%" stop-color="#0a0f1c"/>
+    </radialGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3dd2ff"/>
+      <stop offset="55%" stop-color="#1f8fe0"/>
+      <stop offset="100%" stop-color="#1456b8"/>
+    </linearGradient>
+    <linearGradient id="hi" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.40"/>
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- shield body -->
+  <path d="M256 96 L392 150 V268 C392 350 330 396 256 424 C182 396 120 350 120 268 V150 Z"
+        fill="url(#shield)" stroke="#9fe8ff" stroke-width="6" stroke-opacity="0.55"/>
+  <path d="M256 96 L392 150 V268 C392 350 330 396 256 424 C182 396 120 350 120 268 V150 Z"
+        fill="url(#hi)"/>
+  <!-- circuit check -->
+  <g stroke="#06121f" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.92">
+    <path d="M196 262 L240 308 L330 198"/>
+  </g>
+  <g fill="#06121f" opacity="0.92">
+    <circle cx="196" cy="262" r="20"/>
+    <circle cx="330" cy="198" r="20"/>
+  </g>
+</svg>
