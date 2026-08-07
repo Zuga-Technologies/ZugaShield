@@ -7,7 +7,20 @@ body:
     attributes:
       value: |
         Thanks for reporting a detection bypass. This helps make ZugaShield stronger for everyone.
-        **If this is a critical vulnerability, please email antonio@zuga.dev instead.**
+        **If this is a critical vulnerability, please email buga@zugabot.ai and justin@zugabot.ai (our security lead) instead.**
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How serious is this? (Triage applies the matching `severity:*` label.)
+      options:
+        - "critical — trivially exploitable, high impact (secrets, funds, RCE)"
+        - "high — reliable bypass of a core layer"
+        - "medium — bypass needing specific conditions"
+        - "low — edge case / low impact"
+    validations:
+      required: true
 
   - type: dropdown
     id: layer

@@ -1,0 +1,7 @@
+.venv/
+backend/data/
+shield_ref/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env

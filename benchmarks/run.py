@@ -23,6 +23,11 @@ Usage:
     python benchmarks/run.py
     python benchmarks/run.py --limit 50
     python benchmarks/run.py --attacks path/to/attacks.jsonl --benign path/to/benign.jsonl
+    python benchmarks/run.py --json benchmarks/last_run.json   # machine-readable score
+
+The optional --json writer drops a small, datable score file (tpr/fpr/p95/n +
+ran_at) so downstream tooling (The Pentagon security dashboard) can read a real,
+timestamped benchmark result instead of scraping stdout.
 """
 
 from __future__ import annotations
@@ -31,6 +36,7 @@ import argparse
 import json
 import time
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -85,6 +91,8 @@ def main() -> None:
     parser.add_argument("--attacks", type=Path, default=_DEFAULT_ATTACKS)
     parser.add_argument("--benign", type=Path, default=_DEFAULT_BENIGN)
     parser.add_argument("--limit", type=int, default=0, help="Cap samples per class (0 = all)")
+    parser.add_argument("--json", type=Path, default=None,
+                        help="Also write a machine-readable score file to this path")
     args = parser.parse_args()
 
     attacks = _load(args.attacks, args.limit)
@@ -131,6 +139,20 @@ def main() -> None:
         lines.append(f"| {source} | {_pct(hit, total)} ({hit}/{total}) |")
 
     print("\n".join(lines))
+
+    if args.json:
+        score = {
+            "ran_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "tpr": (tp / len(attacks)) if attacks else None,
+            "fpr": (fp / len(benign)) if benign else None,
+            "avg_latency_ms": round(sum(all_lat) / len(all_lat), 3) if all_lat else None,
+            "p95_latency_ms": round(_p95(all_lat), 3),
+            "attack_n": len(attacks),
+            "benign_n": len(benign),
+        }
+        args.json.parent.mkdir(parents=True, exist_ok=True)
+        args.json.write_text(json.dumps(score, indent=2), encoding="utf-8")
+        print(f"\nWrote score file: {args.json}")
 
 
 if __name__ == "__main__":

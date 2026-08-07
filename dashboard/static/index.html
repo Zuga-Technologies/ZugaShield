@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Pentagon — ZugaShield (Live)</title>
+<style>
+  /* ---------- house palette, lifted verbatim from dominion_page.html / mockup v1 ---------- */
+  :root{
+    --bg:#010308; --panel:#020810; --panel2:#031320;
+    --g-hi:#5cd6ff; --g:#2ea8e8; --g-mid:#1f7ab8; --g-dim:#0f4468; --g-faint:#0a2c48;
+    --txt:#8fd0e8; --txt-dim:#3f7a99;
+    --alert:#ff4433; --alert-dim:#b8493c;
+    --warn:#ff9a4d; --med:#ffcf4d;
+    --pentagon:#9fb8cc;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:"Cascadia Mono",Consolas,"IBM Plex Mono",Menlo,monospace;
+    min-height:100vh;
+  }
+  .mono{font-variant-numeric:tabular-nums}
+  a{color:inherit}
+
+  .chrome{
+    background:var(--panel);
+    border:1px solid var(--g-dim);
+    box-shadow:inset 0 0 14px rgba(46,168,232,.05), 0 0 10px rgba(0,0,0,.8);
+  }
+
+  /* ---------- header ---------- */
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    gap:10px; padding:14px 20px; position:sticky; top:0; z-index:10;
+  }
+  .brand-title{font-size:15px; letter-spacing:.22em; text-transform:uppercase; color:var(--g-hi)}
+  .brand-title .sep{color:var(--txt-dim); margin:0 6px}
+  .brand-sub{font-size:10.5px; color:var(--txt-dim); letter-spacing:.08em; margin-top:3px}
+  .brand-sub b{color:var(--pentagon); font-weight:600}
+  .topbar-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .owner-chip{font-size:10px; letter-spacing:.08em; padding:5px 10px; border:1px solid var(--g-faint);
+    color:var(--txt-dim); white-space:nowrap}
+  .owner-chip b{color:var(--txt); font-weight:600}
+  .asof{font-size:10px; color:var(--txt-dim); display:flex; align-items:center; gap:6px; white-space:nowrap}
+  @keyframes livepulse{0%,100%{opacity:1} 50%{opacity:.25}}
+  .livedot{width:6px; height:6px; border-radius:50%; background:var(--g); box-shadow:0 0 6px var(--g);
+    animation:livepulse 1.8s ease-in-out infinite; flex:none}
+  .livedot.down{background:var(--alert); box-shadow:0 0 6px var(--alert); animation:none}
+
+  .chip{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border:1px solid;
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap}
+  .chip.ok{color:var(--g); border-color:var(--g); box-shadow:0 0 8px rgba(46,168,232,.25)}
+  .chip.warn,.chip.high{color:var(--warn); border-color:var(--warn); box-shadow:0 0 8px rgba(255,154,77,.28)}
+  .chip.down,.chip.crit,.chip.critical{color:var(--alert); border-color:var(--alert); box-shadow:0 0 8px rgba(255,68,51,.3)}
+  .chip.fog{color:var(--txt-dim); border-color:var(--txt-dim)}
+  .chip.info{color:var(--g-hi); border-color:var(--g-dim)}
+  .chip.med,.chip.medium{color:var(--med); border-color:var(--med)}
+  .chip.low{color:var(--txt-dim); border-color:var(--g-faint)}
+
+  /* ---------- connection / disconnected banner (Overseer/Treasury pattern) ---------- */
+  .conn-banner{
+    display:none; margin:0 20px 12px; padding:10px 16px; border:1px solid var(--alert);
+    background:rgba(255,68,51,.07); color:var(--alert); font-size:11.5px; letter-spacing:.02em;
+    box-shadow:0 0 12px rgba(255,68,51,.15);
+  }
+  .conn-banner.show{display:block}
+  .conn-banner b{color:#ffb3a8}
+
+  /* ---------- verdict banner (from mockup v2) ---------- */
+  .verdict{
+    margin:0 20px 14px; padding:18px 22px;
+    border:1px solid var(--warn); border-left:6px solid var(--warn);
+    background:linear-gradient(90deg, rgba(255,154,77,.10), rgba(2,8,16,0) 65%), var(--panel);
+    box-shadow:0 0 22px rgba(255,154,77,.14), inset 0 0 14px rgba(46,168,232,.04);
+    display:flex; flex-wrap:wrap; align-items:center; gap:12px 24px;
+  }
+  .verdict.green{border-color:var(--g); box-shadow:0 0 22px rgba(46,168,232,.16), inset 0 0 14px rgba(46,168,232,.04)}
+  .verdict.red{border-color:var(--alert); box-shadow:0 0 22px rgba(255,68,51,.2), inset 0 0 14px rgba(46,168,232,.04)}
+  .verdict.amber{border-color:var(--warn)}
+  .verdict-badge{font-size:19px; font-weight:700; letter-spacing:.08em; color:var(--warn); flex:none}
+  .verdict.green .verdict-badge{color:var(--g)}
+  .verdict.red .verdict-badge{color:var(--alert)}
+  .verdict-why{flex:1; min-width:280px; font-size:12.5px; color:var(--txt)}
+
+  /* ---------- main content wrapper (dims when disconnected, shows last-good) ---------- */
+  #main.stale-conn{opacity:.5; filter:grayscale(.35)}
+
+  /* ---------- hero tile grid ---------- */
+  .hero{display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:10px; padding:0 20px 14px}
+  .tile{padding:11px 13px; position:relative; min-height:78px}
+  .tile-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px}
+  .prov-badge{font-size:7.5px; letter-spacing:.1em; text-transform:uppercase; padding:2px 6px; border:1px solid; flex:none}
+  .prov-badge.live{color:var(--g); border-color:var(--g)}
+  .prov-badge.computed{color:var(--g-hi); border-color:var(--g-dim)}
+  .prov-badge.manual{color:var(--warn); border-color:var(--warn)}
+  .tile .tval{font-size:19px; font-weight:700; line-height:1.2; word-break:break-word}
+  .tile .tlbl{font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--txt-dim); margin-top:5px}
+  .tile .tnote{font-size:9px; color:var(--txt-dim); margin-top:5px; line-height:1.4}
+  .tile.stat-ok .tval{color:var(--g)}
+
+  .tile.alert{border-color:var(--alert); box-shadow:0 0 10px rgba(255,68,51,.22), inset 0 0 14px rgba(255,68,51,.05)}
+  .tile.alert .tval{color:var(--alert)}
+
+  .tile.state-no_data{border-style:dashed; border-color:var(--g-faint); box-shadow:none; background:rgba(2,8,16,.4)}
+  .tile.state-no_data .tval{color:var(--txt-dim); font-size:14px; font-weight:600; font-style:italic}
+  .tile.state-no_data .tnote{color:var(--txt-dim)}
+
+  .tile.state-stale{opacity:.55}
+  .tile.state-stale .tval{color:var(--txt-dim)}
+
+  /* ---------- panel grid ---------- */
+  .grid{
+    display:grid; gap:12px; padding:0 20px 16px;
+    grid-template-columns:1.15fr 1fr;
+  }
+  .panel{display:flex; flex-direction:column; overflow:hidden; min-height:0}
+  .panel h2{margin:0; padding:10px 14px; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--g); border-bottom:1px solid var(--g-dim); display:flex; align-items:center; gap:8px}
+  .panel h2 .cnt{margin-left:auto; color:var(--txt-dim); font-weight:400; font-size:10px; letter-spacing:.04em; text-transform:none}
+  .panel-body{padding:12px 14px; overflow-y:auto; flex:1; min-height:0}
+  .panel-body::-webkit-scrollbar{width:7px}
+  .panel-body::-webkit-scrollbar-track{background:var(--panel2)}
+  .panel-body::-webkit-scrollbar-thumb{background:var(--g-dim); border:1px solid var(--g-faint)}
+  #feedPanel .panel-body{max-height:440px}
+
+  /* threat feed rows */
+  .feedrow{display:flex; gap:9px; align-items:baseline; padding:6px 0; border-bottom:1px solid var(--g-faint); font-size:11.5px}
+  .feedrow:last-child{border-bottom:none}
+  .feedrow .ft{color:var(--txt-dim); font-size:9.5px; flex:none; width:96px; line-height:1.5}
+  .feedrow .fchip{flex:none; padding:2px 6px; font-size:8.5px}
+  .feedrow .fsrc{flex:none; color:var(--pentagon); font-size:9.5px; width:74px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .feedrow .ftxt{color:var(--txt); line-height:1.5}
+  .empty-note{color:var(--txt-dim); font-size:11px; padding:8px 0}
+
+  /* radar */
+  #radarSvg{width:100%; height:auto; display:block}
+  .radar-scorebox{margin-top:6px; display:grid; grid-template-columns:1fr 1fr; gap:4px 12px}
+  .radar-score{display:flex; justify-content:space-between; align-items:baseline; font-size:11px; padding:4px 0; border-bottom:1px solid var(--g-faint)}
+  .radar-score .rn{color:var(--txt-dim)}
+  .radar-score .rv{color:var(--pentagon); font-weight:700}
+  .radar-score .rv.unscored{color:var(--txt-dim); font-weight:400; font-style:italic; font-size:9.5px}
+
+  /* sources footer */
+  footer.foot{padding:12px 20px 8px; font-size:9.5px; color:var(--txt-dim)}
+  .foot-title{letter-spacing:.14em; text-transform:uppercase; font-size:9px; margin-bottom:8px; color:var(--txt-dim)}
+  .sources-row{display:flex; flex-wrap:wrap; gap:8px 16px}
+  .src-item{display:flex; align-items:center; gap:6px; cursor:default}
+  .src-dot{width:7px; height:7px; border-radius:50%; background:var(--g); flex:none; box-shadow:0 0 5px rgba(46,168,232,.4)}
+  .src-dot.err{background:var(--alert); box-shadow:0 0 5px rgba(255,68,51,.5)}
+  .src-dot.unknown{background:var(--txt-dim); box-shadow:none}
+  footer.foot .credit{text-align:center; margin-top:12px; padding-top:10px; border-top:1px solid var(--g-faint)}
+
+  @media (max-width:980px){
+    .grid{grid-template-columns:1fr}
+  }
+  @media (max-width:720px){
+    .hero{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+    header.topbar{flex-direction:column; align-items:flex-start}
+    .verdict{flex-direction:column; align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar chrome">
+  <div>
+    <div class="brand-title">THE PENTAGON <span class="sep">&middot;</span> Zuga Security</div>
+    <div class="brand-sub"><b>ZugaShield</b> &middot; security posture for the whole Dominion</div>
+  </div>
+  <div class="topbar-right">
+    <span class="owner-chip"><b>Justin</b> — security lead</span>
+    <span class="owner-chip"><b>Buga</b> — owner</span>
+    <span class="asof" id="asofIndicator"><span class="livedot" id="liveDot"></span>connecting&hellip;</span>
+  </div>
+</header>
+
+<div class="conn-banner" id="connBanner"></div>
+
+<section class="verdict chrome amber" id="verdictBanner">
+  <div class="verdict-badge" id="verdictBadge">POSTURE: —</div>
+  <div class="verdict-why" id="verdictWhy">Waiting for first read from the collectors&hellip;</div>
+</section>
+
+<main id="main">
+  <section class="hero" id="heroTiles">
+    <div class="tile chrome state-no_data"><div class="tval">&hellip;</div><div class="tlbl">loading</div></div>
+  </section>
+
+  <div class="grid">
+    <section id="feedPanel" class="panel chrome">
+      <h2>Threat Feed <span class="cnt" id="feedCount">last 15 events</span></h2>
+      <div class="panel-body" id="feedBody">
+        <div class="empty-note">waiting for data&hellip;</div>
+      </div>
+    </section>
+
+    <section id="radarPanel" class="panel chrome">
+      <h2>Five Walls <span class="cnt">defense-in-depth</span></h2>
+      <div class="panel-body">
+        <svg id="radarSvg" viewBox="0 0 340 320"></svg>
+        <div class="radar-scorebox" id="radarScorebox"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot chrome" style="margin:0 20px 20px">
+  <div class="foot-title">Collector Sources</div>
+  <div class="sources-row" id="sourcesRow">
+    <span class="src-item"><span class="src-dot unknown"></span>waiting for data&hellip;</span>
+  </div>
+  <div class="credit">The Pentagon / ZugaShield security dashboard &middot; live &middot; refetches every 30s from <code>/api/pentagon/metrics</code></div>
+</footer>
+
+<script>
+'use strict';
+
+/* ============================================================
+   Formatting helpers
+   ============================================================ */
+function fmtIso(iso){
+  if(!iso) return '—';
+  // backend emits strict "%Y-%m-%dT%H:%M:%SZ" — safe to hand to Date()
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  return d.toLocaleString('en-US', {
+    month:'short', day:'numeric', hour:'2-digit', minute:'2-digit',
+    hour12:false, timeZone:'UTC'
+  }) + ' UTC';
+}
+function fmtTimeShort(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  const now = new Date();
+  const sameDay = d.toISOString().slice(0,10) === now.toISOString().slice(0,10);
+  if(sameDay){
+    return d.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC'});
+  }
+  return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC'});
+}
+function ageStr(iso){
+  if(!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  if(isNaN(ms)) return null;
+  if(ms < 0) return '0s';
+  const s = Math.floor(ms/1000);
+  if(s < 60) return s+'s';
+  const m = Math.floor(s/60);
+  if(m < 60) return m+'m';
+  const h = Math.floor(m/60);
+  if(h < 24) return h+'h';
+  const d = Math.floor(h/24);
+  return d+'d';
+}
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+/* Tiles are keyed by collector id conceptually — map each tile to the
+   collector that feeds it so a "stale" tile can show "last ok <age>" by
+   looking up that collector's last_run in sources[]. This mirrors the
+   real collector wiring in metrics.py (agentpool_rail, catalog, version,
+   benchmark, github_issues, redteam_ledger) rather than guessing. */
+const TILE_TO_SOURCE = {
+  rail_status: 'agentpool_rail', rail_blocks: 'agentpool_rail',
+  signatures: 'catalog', signature_mix: 'catalog',
+  version: 'version',
+  benchmark: 'benchmark',
+  open_vulns: 'github_issues', oldest_open: 'github_issues',
+  red_team: 'redteam_ledger',
+};
+// Preferred display order; any tile keys the backend adds later still
+// render, just appended after these.
+const TILE_ORDER = [
+  'rail_status','rail_blocks','signatures','signature_mix','version',
+  'benchmark','open_vulns','oldest_open','red_team',
+];
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+function renderVerdict(posture){
+  const el = document.getElementById('verdictBanner');
+  const badge = document.getElementById('verdictBadge');
+  const why = document.getElementById('verdictWhy');
+  const level = (posture && posture.level) || 'amber';
+  el.classList.remove('green','amber','red');
+  el.classList.add(level === 'green' ? 'green' : level === 'red' ? 'red' : 'amber');
+  badge.textContent = 'POSTURE: ' + level.toUpperCase();
+  why.textContent = (posture && posture.reason) || 'no reason reported';
+}
+
+function renderTiles(tiles, sourcesByCollector){
+  const host = document.getElementById('heroTiles');
+  const keys = Object.keys(tiles || {});
+  const ordered = TILE_ORDER.filter(k => keys.includes(k)).concat(keys.filter(k => !TILE_ORDER.includes(k)));
+  if(ordered.length === 0){
+    host.innerHTML = '<div class="tile chrome state-no_data"><div class="tval">no tiles</div><div class="tlbl">no data</div></div>';
+    return;
+  }
+  host.innerHTML = ordered.map(key => {
+    const t = tiles[key];
+    const state = t.state || 'ok';
+    const prov = t.provenance || 'computed';
+    const classes = ['tile','chrome'];
+    if(t.alert && state !== 'no_data') classes.push('alert');
+    if(state === 'no_data') classes.push('state-no_data');
+    else if(state === 'stale') classes.push('state-stale');
+    else if(state === 'ok') classes.push('stat-ok');
+
+    let note = '';
+    if(state === 'no_data'){
+      note = t.recording_since
+        ? 'recording since ' + fmtIso(t.recording_since)
+        : 'no data yet';
+    } else if(state === 'stale'){
+      const collector = TILE_TO_SOURCE[key];
+      const src = collector ? sourcesByCollector[collector] : null;
+      const age = src ? ageStr(src.last_run) : null;
+      note = 'stale' + (age ? ' &middot; last ok ' + age + ' ago' : '');
+    }
+
+    const title = esc(t.detail || '');
+    return (
+      '<div class="' + classes.join(' ') + '" title="' + title + '">' +
+        '<div class="tile-top"><span class="prov-badge ' + esc(prov) + '">' + esc(prov) + '</span></div>' +
+        '<div class="tval mono">' + esc(t.value) + '</div>' +
+        '<div class="tlbl">' + esc(t.label) + '</div>' +
+        (note ? '<div class="tnote">' + note + '</div>' : '') +
+      '</div>'
+    );
+  }).join('');
+}
+
+function severityClass(sev){
+  if(sev === 'critical') return 'critical';
+  if(sev === 'high') return 'high';
+  if(sev === 'medium') return 'medium';
+  if(sev === 'low') return 'low';
+  return 'info';
+}
+
+function renderFeed(feed){
+  const body = document.getElementById('feedBody');
+  const count = document.getElementById('feedCount');
+  if(!feed || feed.length === 0){
+    body.innerHTML = '<div class="empty-note">no events yet — the feed fills as collectors run</div>';
+    count.textContent = '0 events';
+    return;
+  }
+  count.textContent = feed.length + ' event' + (feed.length === 1 ? '' : 's');
+  body.innerHTML = feed.map(ev => {
+    const sc = severityClass(ev.severity);
+    return (
+      '<div class="feedrow">' +
+        '<span class="ft mono">' + esc(fmtTimeShort(ev.at)) + '</span>' +
+        '<span class="chip ' + sc + ' fchip">' + esc(ev.severity) + '</span>' +
+        '<span class="fsrc">' + esc(ev.source) + '</span>' +
+        '<span class="ftxt">' + esc(ev.line) + '</span>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+function renderWalls(walls){
+  const scorebox = document.getElementById('radarScorebox');
+  const svg = document.getElementById('radarSvg');
+  walls = walls || [];
+  scorebox.innerHTML = walls.map(w => {
+    const unscored = w.state === 'no_data' || w.score == null;
+    return (
+      '<div class="radar-score" title="' + esc(w.note || '') + '">' +
+        '<span class="rn">' + esc(w.name) + '</span>' +
+        (unscored
+          ? '<span class="rv unscored">not scored yet</span>'
+          : '<span class="rv mono">' + esc(w.score) + '</span>') +
+      '</div>'
+    );
+  }).join('');
+  renderRadar(svg, walls);
+}
+
+/* Hand-rolled 5-axis radar, same plain-trig approach as the mockup.
+   Axes with score == null (not yet benchmarked) collapse to the center
+   and render dashed/grey with a "not scored yet" label instead of a
+   numeric value — never plotted as a confident zero. */
+function renderRadar(svg, items){
+  svg.innerHTML = '';
+  if(!items || items.length === 0) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const cx = 170, cy = 152, maxR = 100, labelR = 130;
+  const n = items.length;
+  function pt(i, r){
+    const ang = (-90 + i*(360/n)) * Math.PI/180;
+    return [cx + r*Math.cos(ang), cy + r*Math.sin(ang)];
+  }
+  function mk(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    svg.appendChild(e);
+    return e;
+  }
+  // grid rings
+  [0.25,0.5,0.75,1].forEach(f => {
+    const pts = items.map((_,i) => pt(i, maxR*f).join(',')).join(' ');
+    mk('polygon',{points:pts, fill:'none', stroke:'#0f4468', 'stroke-width':1});
+  });
+  // spokes — dashed/dim for axes with no score yet
+  items.forEach((it,i) => {
+    const [x,y] = pt(i,maxR);
+    const unscored = it.state === 'no_data' || it.score == null;
+    mk('line',{
+      x1:cx, y1:cy, x2:x, y2:y,
+      stroke: unscored ? '#0a2c48' : '#0f4468',
+      'stroke-width':1,
+      'stroke-dasharray': unscored ? '3,3' : '',
+    });
+  });
+  // data points (score==null collapses to center r=0)
+  const dataPts = items.map((it,i) => {
+    const r = (it.score == null) ? 0 : maxR*it.score/100;
+    return pt(i,r).join(',');
+  }).join(' ');
+  mk('polygon',{points:dataPts, fill:'rgba(159,184,204,.22)', stroke:'#9fb8cc', 'stroke-width':1.6});
+  // per-axis markers + labels
+  items.forEach((it,i) => {
+    const unscored = it.state === 'no_data' || it.score == null;
+    const r = unscored ? 0 : maxR*it.score/100;
+    const [x,y] = pt(i,r);
+    if(unscored){
+      mk('circle',{cx:x, cy:y, r:3.4, fill:'none', stroke:'#3f7a99', 'stroke-width':1.2, 'stroke-dasharray':'2,2'});
+    } else {
+      mk('circle',{cx:x, cy:y, r:3.6, fill:'#9fb8cc'});
+    }
+    const [lx,ly] = pt(i,labelR);
+    const anchor = Math.abs(lx-cx)<4 ? 'middle' : (lx<cx ? 'end' : 'start');
+    const t1 = mk('text',{x:lx, y:ly-4, 'text-anchor':anchor, fill:'#8fd0e8', 'font-size':'10', 'font-family':'Consolas,monospace'});
+    t1.textContent = it.name;
+    const t2 = mk('text',{
+      x:lx, y:ly+11, 'text-anchor':anchor,
+      fill: unscored ? '#3f7a99' : '#5cd6ff',
+      'font-size': unscored ? '8.5' : '12.5',
+      'font-style': unscored ? 'italic' : 'normal',
+      'font-weight': unscored ? '400' : '700',
+      'font-family':'Consolas,monospace',
+    });
+    t2.textContent = unscored ? 'not scored yet' : it.score;
+  });
+}
+
+function renderSources(sources){
+  const row = document.getElementById('sourcesRow');
+  sources = sources || [];
+  if(sources.length === 0){
+    row.innerHTML = '<span class="src-item"><span class="src-dot unknown"></span>no collectors registered</span>';
+    return;
+  }
+  row.innerHTML = sources.map(s => {
+    const known = s.ok !== null && s.ok !== undefined;
+    const dotClass = !known ? 'unknown' : (s.ok ? '' : 'err');
+    const status = !known ? 'never run' : (s.ok ? 'ok' : 'error');
+    const title = s.error ? esc(s.error) : (s.last_run ? 'last run ' + fmtIso(s.last_run) : 'no run yet');
+    return (
+      '<span class="src-item" title="' + title + '">' +
+        '<span class="src-dot ' + dotClass + '"></span>' +
+        esc(s.collector) + ' <span style="opacity:.6">(' + esc(s.provenance) + ' &middot; ' + status +
+        (s.last_run ? ' &middot; ' + (ageStr(s.last_run) || '?') + ' ago' : '') + ')</span>' +
+      '</span>'
+    );
+  }).join('');
+}
+
+/* ============================================================
+   Fetch loop — same fetch()+setInterval(30000) pattern used across the
+   Dominion's other live static dashboards (ZugaTreasury, ZugaOverseer):
+   poll on load and every 30s, keep last-good data visible (dimmed) and
+   show a red banner on failure instead of ever going silently blank.
+   ============================================================ */
+let lastGood = null;
+
+function setConnState(ok, message){
+  const dot = document.getElementById('liveDot');
+  const banner = document.getElementById('connBanner');
+  const asof = document.getElementById('asofIndicator');
+  if(ok){
+    dot.classList.remove('down');
+    banner.classList.remove('show');
+    document.getElementById('main').classList.remove('stale-conn');
+  } else {
+    dot.classList.add('down');
+    banner.classList.add('show');
+    banner.innerHTML = '<b>DISCONNECTED</b> — cannot reach /api/pentagon/metrics (' + esc(message) + ').' +
+      (lastGood ? ' Showing last-good data from ' + esc(fmtIso(lastGood.as_of)) + ', dimmed.' : ' No data received yet.');
+    if(lastGood) document.getElementById('main').classList.add('stale-conn');
+  }
+}
+
+function render(data){
+  const sourcesByCollector = {};
+  (data.sources || []).forEach(s => { sourcesByCollector[s.collector] = s; });
+  renderVerdict(data.posture);
+  renderTiles(data.tiles, sourcesByCollector);
+  renderFeed(data.feed);
+  renderWalls(data.walls);
+  renderSources(data.sources);
+  document.getElementById('asofIndicator').innerHTML =
+    '<span class="livedot" id="liveDot"></span>updated ' + esc(fmtIso(data.as_of)) + ' &middot; refreshing every 30s';
+}
+
+async function refresh(){
+  try{
+    const res = await fetch('/api/pentagon/metrics', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    lastGood = data;
+    render(data);
+    setConnState(true);
+  }catch(e){
+    setConnState(false, e.message);
+  }
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+
+</body></html>
