@@ -5,6 +5,40 @@ All notable changes to ZugaShield will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-08-07
+
+### Added
+
+**Hardening**
+- TR39 homoglyph detection via the `confusable-homoglyphs` library (7000+ Unicode confusable pairs)
+- MCP tool definition scanning (CVE-2025-53773)
+- Memory session isolation + provenance tracking (`source_trust` column)
+- Red-team test suite: 72 adversarial tests
+
+### Changed
+
+- Signature catalog metadata reconciled with the actual signature files (#16):
+  `total_signatures` corrected 135 -> 152, missing `indirect_injection`
+  category (16 signatures) added, severity split re-tallied
+  (55 critical / 75 high / 19 medium / 3 low). No signatures added or removed.
+
+### Fixed
+
+- Signature integrity verification no longer fails on healthy checkouts.
+  Two causes fixed: the #16 metadata reconciliation left a stale hash for
+  `catalog_version.json`, and all manifest hashes were line-ending-dependent
+  (CRLF on Windows checkouts vs LF elsewhere, via `core.autocrlf`), so the
+  tamper check could only ever pass on the platform that generated the
+  manifest. Signature JSONs are now pinned to LF via `.gitattributes` and
+  `integrity.json` stores hashes of those canonical bytes. Also added the
+  previously untracked `indirect_injection.json` to the manifest so every
+  loaded signature file is integrity-verified.
+- Audit logger docstrings no longer claim database persistence that does not
+  exist (#15). `ShieldAuditLogger` is now accurately documented as a volatile
+  in-memory ring buffer that stores events for non-ALLOW verdicts only, with
+  counters covering all decisions. Durable persistence remains an open
+  product decision tracked in #15's follow-up discussion.
+
 ## [1.1.0] - 2026-02-17
 
 ### Added
