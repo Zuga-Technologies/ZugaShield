@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    {name = "Antonio Zugaldia", email = "antonio@zugaldia.com"},
+    {name = "Zuga Technologies", email = "buga@zugabot.ai"},
 ]
 keywords = [
     "ai-safety", "llm-security", "prompt-injection", "guardrails",

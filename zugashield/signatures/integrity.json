@@ -1,6 +1,6 @@
 {
   "ascii_art.json": "c9e236117bfb53bbd16b2a37a6dbf347691b37cf58211d09ecdbc1af7557a3ff",
-  "catalog_version.json": "6f92704346cd2feb59ab1cb11fa8eb10d38df748aefcbba642113c96b8a907d5",
+  "catalog_version.json": "4142f2d90daacf72c452b1defe91185211cf25946cf95ab09d0dec0d2fb3d6e9",
   "exfiltration.json": "cd7a603475b215d6ed915d217f17bb4e712f822e1dc1d42369dd9c417321ecca",
   "indirect_injection.json": "ae61e0e1f81ed166b64ba33f9704cf33959c9cfbea38546b3c8f379bdb49b28e",
   "memory_poisoning.json": "f1c94f1888211f5c29b1cf7fd5cbaa68a9b4b4883048bdf3ae55060aac163519",

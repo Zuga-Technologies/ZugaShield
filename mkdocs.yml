@@ -1,7 +1,7 @@
 site_name: ZugaShield
 site_url: https://zugashield.dev
 site_description: 7-layer security system for AI agents — prompt injection, tool exploitation, memory poisoning, and more.
-site_author: Antonio Zugaldia
+site_author: Zuga Technologies
 repo_url: https://github.com/Zuga-luga/ZugaShield
 repo_name: Zuga-luga/ZugaShield
 edit_uri: edit/main/docs/

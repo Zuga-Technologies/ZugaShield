@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "last_updated": "2026-02-07T18:00:00Z",
   "total_signatures": 152,
   "description": "ZugaShield v1.2 - Hardening release: TR39 homoglyph detection, MCP tool definition scanning, memory session isolation + provenance, red team test suite (72 tests)",
@@ -55,10 +55,16 @@
   },
   "changelog": [
     {
+      "version": "1.2.1",
+      "date": "2026-08-07",
+      "added": 0,
+      "changes": "Version alignment with package release 1.2.1 (author-metadata correction). No signature or code changes."
+    },
+    {
       "version": "1.2.0",
       "date": "2026-08-06",
       "added": 0,
-      "changes": "Metadata reconciliation (issue #16): total_signatures 135->152 to match the actual signature files, added the missing indirect_injection category (16), corrected exfiltration 17->18, and re-tallied the severity split from source (55 critical / 75 high / 19 medium / 3 low). No signatures added or removed — the files were always 152; only the metadata undercounted."
+      "changes": "Metadata reconciliation (issue #16): total_signatures 135->152 to match the actual signature files, added the missing indirect_injection category (16), corrected exfiltration 17->18, and re-tallied the severity split from source (55 critical / 75 high / 19 medium / 3 low). No signatures added or removed \u2014 the files were always 152; only the metadata undercounted."
     },
     {
       "version": "1.2.0",

@@ -2,7 +2,7 @@
 
 ## Project Lead
 
-**Antonio Zugaldia** ([@Zuga-luga](https://github.com/Zuga-luga)) is the project lead and final decision-maker (BDFL) for ZugaShield.
+**Buga** ([@Zuga-luga](https://github.com/Zuga-luga)) is the project lead and final decision-maker (BDFL) for ZugaShield.
 
 ## Decision Making
 
@@ -36,4 +36,4 @@ Security-critical PRs are never merged without:
 
 - **Issues**: Bug reports, feature requests, bypass reports
 - **Discussions**: Ideas, threat intelligence sharing
-- **Security reports**: antonio@zuga.dev (see SECURITY.md)
+- **Security reports**: buga@zugabot.ai and justin@zugabot.ai (see SECURITY.md)

@@ -5,6 +5,18 @@ All notable changes to ZugaShield will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-08-07
+
+### Fixed
+
+- Author/maintainer metadata corrected across `pyproject.toml`, `mkdocs.yml`,
+  and `GOVERNANCE.md`: earlier boilerplate misattributed the project to an
+  unrelated person and referenced a nonexistent contact domain. The project
+  is by Zuga Technologies; security contact is buga@zugabot.ai and
+  justin@zugabot.ai as in SECURITY.md. The v1.2.0 GitHub Release artifacts
+  carry the old metadata; v1.2.1 supersedes them and is the version intended
+  for PyPI. No code or signature changes.
+
 ## [1.2.0] - 2026-08-07
 
 ### Added
