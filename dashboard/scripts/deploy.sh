@@ -21,7 +21,7 @@ echo "=== The Pentagon Deploy (git) ==="
 echo "[1/3] Cloning/pulling ZugaShield on the Mac Mini..."
 ssh "$REMOTE_HOST" "mkdir -p ~/Projects && \
   if [ -d $REMOTE_REPO/.git ]; then \
-    cd $REMOTE_REPO && git fetch --quiet origin && git reset --hard --quiet origin/master; \
+    cd $REMOTE_REPO && git fetch --quiet origin && git reset --keep --quiet origin/master; \
   else \
     git clone --quiet $REPO_URL $REMOTE_REPO; \
   fi && cd $REMOTE_REPO && git log --oneline -1"
