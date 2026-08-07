@@ -4,18 +4,31 @@
   POST /api/pentagon/redteam-run   Justin logs a red-team campaign into the ledger
 """
 
+import hmac
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header, HTTPException
+
 from pydantic import BaseModel, Field
 
 import db
 import metrics
 from collectors import redteam_ledger
+from config import settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/pentagon", tags=["pentagon"])
+
+
+def _require_write_key(provided: str | None) -> None:
+    """Gate writes when a key is configured. Constant-time compare. Reads stay
+    open — only the coverage-mutating POST is protected."""
+    expected = settings.pentagon_write_key
+    if not expected:
+        return  # open (dev) — production sets pentagon_write_key
+    if not provided or not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=401, detail="invalid or missing X-Pentagon-Key")
 
 
 @router.get("/metrics")
@@ -49,7 +62,8 @@ class RedTeamRun(BaseModel):
 
 
 @router.post("/redteam-run")
-async def log_redteam_run(run: RedTeamRun):
+async def log_redteam_run(run: RedTeamRun, x_pentagon_key: str | None = Header(default=None)):
+    _require_write_key(x_pentagon_key)
     row = redteam_ledger.append_run(
         target=run.target, attempts=run.attempts, bypasses=run.bypasses,
         by=run.by, note=run.note,

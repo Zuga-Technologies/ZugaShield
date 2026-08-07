@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     # A collector whose last successful run is older than this reads as stale.
     stale_after_seconds: int = 1800
 
+    # Write auth for POST /api/pentagon/redteam-run. When set, the endpoint
+    # requires a matching X-Pentagon-Key header (so red-team coverage can't be
+    # forged by anyone who can reach the public URL). Empty = open (dev only).
+    pentagon_write_key: str = ""
+
     @property
     def db_path(self) -> Path:
         p = Path(self.pentagon_db_path)
