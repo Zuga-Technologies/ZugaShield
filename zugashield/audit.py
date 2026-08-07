@@ -2,14 +2,23 @@
 ZugaShield - Audit Logger
 ===========================
 
-Security event logging and forensics.
-Records all shield decisions for:
+In-process security event logging for live observability.
+Records shield decisions for:
 - Real-time dashboard display
-- Post-incident forensics
 - False positive analysis
 - Performance monitoring
 
-Uses in-memory ring buffer with optional database persistence.
+Storage is an in-memory ring buffer ONLY (capped, oldest events silently
+dropped once full; contents lost on process restart). There is no database
+persistence. Aggregate counters cover every decision, but individual events
+are recorded for non-ALLOW verdicts only — ALLOW decisions increment
+counters without producing an event.
+
+This is NOT a durable, complete audit trail in the compliance sense
+(post-incident forensics across restarts, record of allowed actions).
+Blocked decisions are additionally emitted through the standard `logging`
+module, so durable retention can be achieved today by attaching a file/syslog
+handler to the `zugashield.audit` logger.
 """
 
 from __future__ import annotations
@@ -51,8 +60,9 @@ class ShieldAuditLogger:
     """
     Audit logger for ZugaShield events.
 
-    Maintains an in-memory ring buffer of recent events
+    Maintains an in-memory ring buffer of recent non-ALLOW events
     and provides query/filter capabilities for the dashboard.
+    Volatile: the buffer does not survive process restarts.
     """
 
     def __init__(self, max_events: int = _MAX_EVENTS) -> None:
@@ -69,6 +79,9 @@ class ShieldAuditLogger:
     def log(self, decision: ShieldDecision, context: Optional[Dict[str, Any]] = None) -> None:
         """
         Log a shield decision.
+
+        Every decision updates the aggregate counters and per-layer stats.
+        Only non-ALLOW decisions are stored as events in the ring buffer.
 
         Args:
             decision: The ShieldDecision from any layer
