@@ -41,6 +41,12 @@ def _load() -> list[dict]:
         return []
 
 
+def _norm(target: str) -> str:
+    """Normalize a target id so 'ZugaShield' and 'zugashield ' both count as the
+    same coverage key (audit 2b — exact-match silently dropped runs)."""
+    return (target or "").strip().lower()
+
+
 def append_run(target: str, attempts: int, bypasses: int, by: str, note: str = "") -> dict:
     """Append a red-team campaign row. Called from the API route."""
     p = ledger_path()
@@ -48,7 +54,7 @@ def append_run(target: str, attempts: int, bypasses: int, by: str, note: str = "
     rows = _load()
     row = {
         "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "target": target,
+        "target": _norm(target),
         "attempts": int(attempts),
         "bypasses": int(bypasses),
         "by": by,
@@ -72,7 +78,7 @@ async def collect() -> CollectResult:
 
     attempts = sum(int(r.get("attempts", 0)) for r in rows)
     bypasses = sum(int(r.get("bypasses", 0)) for r in rows)
-    covered = {r.get("target") for r in rows}
+    covered = {_norm(r.get("target")) for r in rows}
 
     payload = {
         "runs": len(rows),

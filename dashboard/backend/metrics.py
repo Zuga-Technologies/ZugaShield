@@ -27,6 +27,15 @@ def _age_seconds(iso: str | None) -> float | None:
         return None
 
 
+def _stale_threshold(cid: str) -> float:
+    """A collector counts as stale only past 1.5x its own poll interval (min the
+    global floor). A healthy 3600s-interval collector must NOT read 'stale' 30
+    min after each run just because the global floor is 1800s."""
+    mod = REGISTRY.get(cid)
+    interval = getattr(mod, "INTERVAL", 900) if mod else 900
+    return max(settings.stale_after_seconds, interval * 1.5)
+
+
 def _collector_state(cid: str) -> tuple[str, dict | None, str | None]:
     """Return (state, snapshot, recording_since). state is a coarse freshness
     read used as a fallback; individual tiles refine it (e.g. an available:False
@@ -37,7 +46,7 @@ def _collector_state(cid: str) -> tuple[str, dict | None, str | None]:
     if snap is None:
         return "no_data", None, since
     age = _age_seconds(last_ok)
-    if age is None or age > settings.stale_after_seconds:
+    if age is None or age > _stale_threshold(cid):
         return "stale", snap, since
     return "ok", snap, since
 
@@ -63,13 +72,19 @@ def build() -> dict:
     # --- rail (LIVE) ---
     rstate, rsnap, rsince = _collector_state("agentpool_rail")
     if rsnap:
+        rail_up = rsnap.get("up")
+        # State reflects real freshness (ok/stale/no_data). Only a FRESH DOWN
+        # reading is an alert — a stale reading dims + notes its age instead of
+        # showing a cached "UP" at full confidence (audit 1a/1c).
         tiles["rail_status"] = _tile(
-            "UP" if rsnap.get("up") else "DOWN",
+            "UP" if rail_up else "DOWN",
             "shield rail",
-            "live", "ok" if rsnap.get("up") else "stale",
+            "live", rstate,
             "AgentPool's write-time guard — every posted fix is screened by "
-            "ZugaShield before another agent can read it. UP = the gate is live.",
-            alert=not rsnap.get("up"),
+            "ZugaShield before another agent can read it. UP = the gate is live. "
+            "Fix: if DOWN, check the AgentPool Railway service — the fix-pool is "
+            "unguarded until it's back.",
+            alert=(rstate == "ok" and not rail_up),
         )
         tiles["rail_blocks"] = _tile(
             str(rsnap.get("blocked", 0)),
@@ -87,14 +102,17 @@ def build() -> dict:
     # --- catalog (LIVE) ---
     cstate, csnap, csince = _collector_state("catalog")
     if csnap:
+        drift = csnap.get("count_drift")
         tiles["signatures"] = _tile(
             str(csnap.get("actual_total")),
             f"signatures (v{csnap.get('version')})",
             "live", cstate,
             "Live count of threat signatures across the catalog files. "
             f"Metadata declares {csnap.get('declared_total')}; drift "
-            f"{csnap.get('count_drift'):+d} is flagged in the feed.",
-            alert=bool(csnap.get("count_drift")),
+            f"{drift:+d}. Fix: reconcile catalog_version.json (issue #16, Justin)."
+            if drift else
+            "Live count of threat signatures across the catalog files.",
+            alert=bool(drift),
         )
         sev = csnap.get("severity_mix", {})
         tiles["signature_mix"] = _tile(
@@ -105,9 +123,13 @@ def build() -> dict:
             f"{sev.get('high',0)} high, {sev.get('medium',0)} medium, "
             f"{sev.get('low',0)} low.",
         )
+    else:
+        tiles["signatures"] = _tile("—", "signatures", "live", "no_data",
+                                    "Signature catalog not read yet.",
+                                    recording_since=csince)
 
     # --- version drift (LIVE) ---
-    vstate, vsnap, _ = _collector_state("version")
+    vstate, vsnap, vsince = _collector_state("version")
     if vsnap:
         tiles["version"] = _tile(
             f"pkg {vsnap.get('package')} / cat {vsnap.get('catalog')}",
@@ -115,9 +137,14 @@ def build() -> dict:
             "live", vstate,
             f"Package {vsnap.get('package')}, catalog {vsnap.get('catalog')}, "
             f"PyPI {vsnap.get('pypi')}, latest tag {vsnap.get('latest_tag')}. "
-            "These should agree; drift means the release process is out of sync.",
+            "Fix: bump _version.py to the catalog version and cut a git tag "
+            "(arms the PyPI release). Release decision — Justin/Buga.",
             alert=not vsnap.get("coherent"),
         )
+    else:
+        tiles["version"] = _tile("—", "version coherence", "live", "no_data",
+                                 "Version files not read yet.",
+                                 recording_since=vsince)
 
     # --- benchmark (COMPUTED) ---
     bstate, bsnap, bsince = _collector_state("benchmark")
@@ -189,7 +216,17 @@ def build() -> dict:
     walls = _build_walls(rsnap, csnap, bsnap, isnap, tsnap)
 
     # --- posture verdict (only from tiles that have data) ---
-    posture = _posture(tiles)
+    # A fresh rail-DOWN or any open CRITICAL issue is hard-red; other alerts amber.
+    crit_open = 0
+    if isnap:
+        crit_open = isnap.get("by_severity", {}).get("critical", 0)
+    rail_down = bool(rsnap and rstate == "ok" and not rsnap.get("up"))
+    red_reasons = []
+    if rail_down:
+        red_reasons.append("shield rail is DOWN")
+    if crit_open:
+        red_reasons.append(f"{crit_open} open CRITICAL issue(s)")
+    posture = _posture(tiles, red_reasons)
 
     return {
         "as_of": _now_iso(),
@@ -236,19 +273,45 @@ def _build_walls(rsnap, csnap, bsnap, isnap, tsnap) -> list[dict]:
                            "share of targets with a logged campaign"))
     else:
         walls.append(_wall("Red-Team Coverage", None, "no campaigns yet"))
-    # Dependency Hygiene — ZugaShield ships zero runtime deps by design.
-    walls.append(_wall("Dependency Hygiene", 100,
-                       "zero runtime dependencies (pyproject dependencies = [])"))
+    # Dependency Hygiene — ZugaShield ships zero runtime deps by design. Verify
+    # it live against pyproject.toml rather than asserting a permanent 100.
+    ndeps = _runtime_dep_count()
+    if ndeps is None:
+        walls.append(_wall("Dependency Hygiene", None, "pyproject.toml not readable"))
+    elif ndeps == 0:
+        walls.append(_wall("Dependency Hygiene", 100,
+                           "zero runtime dependencies (pyproject dependencies = [])"))
+    else:
+        walls.append(_wall("Dependency Hygiene", max(50, 100 - ndeps * 10),
+                           f"{ndeps} runtime dependency(ies) — was zero by design"))
     return walls
 
 
-def _posture(tiles: dict) -> dict:
-    """Green/amber/red from tiles that actually have data. No data ≠ red."""
+def _runtime_dep_count() -> int | None:
+    """Count entries in pyproject's [project].dependencies. None if unreadable."""
+    import re
+    p = settings.repo_path / "pyproject.toml"
+    if not p.exists():
+        return None
+    try:
+        text = p.read_text(encoding="utf-8")
+        m = re.search(r"(?ms)^\s*dependencies\s*=\s*\[(.*?)\]", text)
+        if not m:
+            return None
+        body = m.group(1)
+        return len([x for x in re.findall(r'["\']([^"\']+)["\']', body) if x.strip()])
+    except Exception:
+        return None
+
+
+def _posture(tiles: dict, red_reasons: list[str]) -> dict:
+    """Green/amber/red from tiles that actually have data. No data ≠ red.
+    red_reasons (rail-down, open critical) hard-escalate to red; any other
+    alerting tile is amber."""
+    if red_reasons:
+        return {"level": "red", "reason": "; ".join(red_reasons)}
     alerts = [k for k, t in tiles.items()
               if t.get("alert") and t.get("state") != "no_data"]
-    hard = [k for k in alerts if k in ("rail_status", "open_vulns")]
-    if hard and "rail_status" in hard:
-        return {"level": "red", "reason": "shield rail is down"}
     if alerts:
         return {"level": "amber",
                 "reason": f"{len(alerts)} tile(s) need attention: {', '.join(alerts)}"}

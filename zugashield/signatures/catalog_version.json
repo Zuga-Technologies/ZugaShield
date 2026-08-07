@@ -1,7 +1,7 @@
 {
   "version": "1.2.0",
   "last_updated": "2026-02-07T18:00:00Z",
-  "total_signatures": 135,
+  "total_signatures": 152,
   "description": "ZugaShield v1.2 - Hardening release: TR39 homoglyph detection, MCP tool definition scanning, memory session isolation + provenance, red team test suite (72 tests)",
   "categories": {
     "prompt_injection": {
@@ -31,8 +31,13 @@
     },
     "exfiltration": {
       "file": "exfiltration.json",
-      "count": 17,
+      "count": 18,
       "description": "Data exfiltration: markdown image tags, WebSocket covert channels"
+    },
+    "indirect_injection": {
+      "file": "indirect_injection.json",
+      "count": 16,
+      "description": "Indirect prompt injection via retrieved/tool content, RAG poisoning, cross-source instruction smuggling"
     },
     "wallet_attacks": {
       "file": "wallet_attacks.json",
@@ -42,13 +47,19 @@
   },
   "statistics": {
     "critical_severity": 55,
-    "high_severity": 48,
-    "medium_severity": 25,
-    "low_severity": 7,
+    "high_severity": 75,
+    "medium_severity": 19,
+    "low_severity": 3,
     "avg_confidence": 0.83,
     "avg_false_positive_rate": 0.038
   },
   "changelog": [
+    {
+      "version": "1.2.0",
+      "date": "2026-08-06",
+      "added": 0,
+      "changes": "Metadata reconciliation (issue #16): total_signatures 135->152 to match the actual signature files, added the missing indirect_injection category (16), corrected exfiltration 17->18, and re-tallied the severity split from source (55 critical / 75 high / 19 medium / 3 low). No signatures added or removed — the files were always 152; only the metadata undercounted."
+    },
     {
       "version": "1.2.0",
       "date": "2026-02-07",

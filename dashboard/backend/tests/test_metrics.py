@@ -62,6 +62,39 @@ def test_domain_summary_ok_when_empty(fresh_db):
     assert out["studio_id"] == "shield"
 
 
+def test_empty_build_signatures_and_version_are_no_data(fresh_db):
+    # catalog + version tiles must render no_data (not vanish) before first run.
+    m = metrics.build()
+    assert m["tiles"]["signatures"]["state"] == "no_data"
+    assert m["tiles"]["version"]["state"] == "no_data"
+
+
+def test_per_collector_stale_threshold(fresh_db):
+    # A 3600s-interval collector must not go stale at the 1800s global floor.
+    assert metrics._stale_threshold("benchmark") == 3600 * 1.5
+    assert metrics._stale_threshold("github_issues") == max(1800, 1800 * 1.5)
+
+
+def test_open_critical_issue_forces_red(fresh_db):
+    db.store_snapshot("github_issues", {
+        "open_total": 1, "by_severity": {"critical": 1, "high": 0, "medium": 0,
+                                         "low": 0, "unlabeled": 0},
+        "oldest_open_age_days": 1.0, "repo": "x"})
+    db.record_run("github_issues", ok=True, latency_ms=10, error=None)
+    m = metrics.build()
+    assert m["posture"]["level"] == "red"
+
+
+def test_fresh_rail_down_is_alert_not_stale(fresh_db):
+    db.store_snapshot("agentpool_rail", {"up": False, "blocked": 0,
+                                         "scanned_and_stored": 0})
+    db.record_run("agentpool_rail", ok=True, latency_ms=10, error=None)
+    t = metrics.build()["tiles"]["rail_status"]
+    assert t["value"] == "DOWN"
+    assert t["alert"] is True
+    assert t["state"] == "ok"  # fresh reading — must NOT be mislabeled stale
+
+
 def test_domain_manifest_is_shield(fresh_db):
     out = asyncio.run(domain.manifest())
     assert out["studio_id"] == "shield"

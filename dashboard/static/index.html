@@ -108,10 +108,17 @@
   .tile.state-stale{opacity:.55}
   .tile.state-stale .tval{color:var(--txt-dim)}
 
+  /* An alert must ALWAYS win over stale dimming — a real DOWN/critical reading is
+     the most severe tile in the app and must never render dim-gray. Higher
+     specificity + declared last so it beats .tile.state-stale above. */
+  .tile.alert.state-stale{opacity:1}
+  .tile.alert.state-stale .tval{color:var(--alert)}
+
   /* ---------- panel grid ---------- */
   .grid{
     display:grid; gap:12px; padding:0 20px 16px;
     grid-template-columns:1.15fr 1fr;
+    align-items:start;  /* each panel sizes to its own content — no dead stretch under a short feed */
   }
   .panel{display:flex; flex-direction:column; overflow:hidden; min-height:0}
   .panel h2{margin:0; padding:10px 14px; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
@@ -124,12 +131,12 @@
   #feedPanel .panel-body{max-height:440px}
 
   /* threat feed rows */
-  .feedrow{display:flex; gap:9px; align-items:baseline; padding:6px 0; border-bottom:1px solid var(--g-faint); font-size:11.5px}
+  .feedrow{display:flex; gap:9px; align-items:baseline; padding:6px 0; border-bottom:1px solid var(--g-faint); font-size:11.5px; min-width:0}
   .feedrow:last-child{border-bottom:none}
   .feedrow .ft{color:var(--txt-dim); font-size:9.5px; flex:none; width:96px; line-height:1.5}
   .feedrow .fchip{flex:none; padding:2px 6px; font-size:8.5px}
   .feedrow .fsrc{flex:none; color:var(--pentagon); font-size:9.5px; width:74px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .feedrow .ftxt{color:var(--txt); line-height:1.5}
+  .feedrow .ftxt{color:var(--txt); line-height:1.5; min-width:0; overflow-wrap:break-word}
   .empty-note{color:var(--txt-dim); font-size:11px; padding:8px 0}
 
   /* radar */
@@ -197,7 +204,7 @@
     <section id="radarPanel" class="panel chrome">
       <h2>Five Walls <span class="cnt">defense-in-depth</span></h2>
       <div class="panel-body">
-        <svg id="radarSvg" viewBox="0 0 340 320"></svg>
+        <svg id="radarSvg" viewBox="-70 0 480 320"></svg>
         <div class="radar-scorebox" id="radarScorebox"></div>
       </div>
     </section>
@@ -439,12 +446,17 @@ function renderRadar(svg, items){
     if(unscored){
       mk('circle',{cx:x, cy:y, r:3.4, fill:'none', stroke:'#3f7a99', 'stroke-width':1.2, 'stroke-dasharray':'2,2'});
     } else {
-      mk('circle',{cx:x, cy:y, r:3.6, fill:'#9fb8cc'});
+      // A real 0 collapses to center like an unscored axis — mark it alert-red
+      // so "catastrophically bad (0/100)" reads distinctly from "not measured".
+      mk('circle',{cx:x, cy:y, r:3.6, fill: it.score === 0 ? '#ff4433' : '#9fb8cc'});
     }
     const [lx,ly] = pt(i,labelR);
     const anchor = Math.abs(lx-cx)<4 ? 'middle' : (lx<cx ? 'end' : 'start');
+    // Shorten the two wide side labels so they never overflow the SVG edges.
+    const SHORT = {'Exfiltration / DLP':'Exfil / DLP', 'Dependency Hygiene':'Dep. Hygiene',
+                   'Injection Defense':'Injection', 'Red-Team Coverage':'Red-Team'};
     const t1 = mk('text',{x:lx, y:ly-4, 'text-anchor':anchor, fill:'#8fd0e8', 'font-size':'10', 'font-family':'Consolas,monospace'});
-    t1.textContent = it.name;
+    t1.textContent = SHORT[it.name] || it.name;
     const t2 = mk('text',{
       x:lx, y:ly+11, 'text-anchor':anchor,
       fill: unscored ? '#3f7a99' : '#5cd6ff',
