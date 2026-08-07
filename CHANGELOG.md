@@ -28,9 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Two causes fixed: the #16 metadata reconciliation left a stale hash for
   `catalog_version.json`, and all manifest hashes were line-ending-dependent
   (CRLF on Windows checkouts vs LF elsewhere, via `core.autocrlf`), so the
-  tamper check could only ever pass on the platform that generated the
-  manifest. Signature JSONs are now pinned to LF via `.gitattributes` and
-  `integrity.json` stores hashes of those canonical bytes. Also added the
+  tamper check could only ever pass on a checkout with matching line
+  endings. `.gitattributes` already pins these files to LF; `integrity.json`
+  now stores hashes of those canonical LF bytes. Also added the
   previously untracked `indirect_injection.json` to the manifest so every
   loaded signature file is integrity-verified.
 - Audit logger docstrings no longer claim database persistence that does not
