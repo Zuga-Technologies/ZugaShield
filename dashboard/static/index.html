@@ -218,6 +218,15 @@
 /* ============================================================
    Formatting helpers
    ============================================================ */
+// All display times are Eastern (America/New_York handles EST/EDT automatically).
+const ET_ZONE = 'America/New_York';
+function _etDate(iso){ // ET calendar date "YYYY-MM-DD" for a UTC instant
+  return new Date(iso).toLocaleDateString('en-CA', {timeZone: ET_ZONE});
+}
+function nowET(){
+  return new Date().toLocaleTimeString('en-US',
+    {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:ET_ZONE});
+}
 function fmtIso(iso){
   if(!iso) return '—';
   // backend emits strict "%Y-%m-%dT%H:%M:%SZ" — safe to hand to Date()
@@ -225,19 +234,18 @@ function fmtIso(iso){
   if(isNaN(d.getTime())) return iso;
   return d.toLocaleString('en-US', {
     month:'short', day:'numeric', hour:'2-digit', minute:'2-digit',
-    hour12:false, timeZone:'UTC'
-  }) + ' UTC';
+    hour12:false, timeZone:ET_ZONE
+  }) + ' ET';
 }
 function fmtTimeShort(iso){
   if(!iso) return '—';
   const d = new Date(iso);
   if(isNaN(d.getTime())) return iso;
-  const now = new Date();
-  const sameDay = d.toISOString().slice(0,10) === now.toISOString().slice(0,10);
+  const sameDay = _etDate(iso) === _etDate(new Date().toISOString());
   if(sameDay){
-    return d.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC'});
+    return d.toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:ET_ZONE});
   }
-  return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC'});
+  return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:ET_ZONE});
 }
 function ageStr(iso){
   if(!iso) return null;
@@ -505,7 +513,9 @@ function render(data){
   renderWalls(data.walls);
   renderSources(data.sources);
   document.getElementById('asofIndicator').innerHTML =
-    '<span class="livedot" id="liveDot"></span>updated ' + esc(fmtIso(data.as_of)) + ' &middot; refreshing every 30s';
+    '<span class="livedot" id="liveDot"></span>' +
+    '<span id="liveClock">' + esc(nowET()) + '</span> ET &middot; updated ' +
+    esc(fmtIso(data.as_of)) + ' &middot; refreshing every 30s';
 }
 
 async function refresh(){
@@ -523,6 +533,11 @@ async function refresh(){
 
 refresh();
 setInterval(refresh, 30000);
+// Live ET clock — ticks every second between the 30s data refreshes.
+setInterval(function(){
+  const el = document.getElementById('liveClock');
+  if(el) el.textContent = nowET();
+}, 1000);
 </script>
 
 </body></html>
