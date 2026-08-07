@@ -23,6 +23,23 @@ async def get_metrics():
     return metrics.build()
 
 
+@router.get("/redteam-coverage")
+async def redteam_coverage():
+    """Per-target red-team coverage + the next target due. Drives /red-team."""
+    from collectors import redteam_ledger
+    rows = redteam_ledger._load()
+    targets, next_due = redteam_ledger._target_status(rows)
+    covered = sum(1 for t in targets if t["covered"])
+    return {
+        "coverage_pct": round(100 * covered / len(targets)) if targets else 0,
+        "covered": covered,
+        "total": len(targets),
+        "next_due": next_due,
+        "targets": sorted(targets, key=lambda t: (t["tier"], t["covered"],
+                                                  -(t["days_since"] or 0))),
+    }
+
+
 class RedTeamRun(BaseModel):
     target: str = Field(..., description="zugashield | zugabot.ai | studios | mcp-servers | ...")
     attempts: int = Field(..., ge=0)

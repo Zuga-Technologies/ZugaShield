@@ -197,19 +197,22 @@ def build() -> dict:
     # --- red team (MANUAL, empty until Justin runs one) ---
     tstate, tsnap, tsince = _collector_state("redteam_ledger")
     if tsnap and tsnap.get("runs", 0) > 0:
+        nxt = (tsnap.get("next_due") or {}).get("id", "?")
         tiles["red_team"] = _tile(
             f"{tsnap.get('days_since_last')}d ago",
             "last red-team",
             "manual", tstate,
-            f"{tsnap.get('runs')} campaigns logged. Bypass rate "
-            f"{tsnap.get('bypass_rate')}, last target {tsnap.get('last_target')}.",
+            f"{tsnap.get('runs')} campaigns, {tsnap.get('coverage_pct', 0)}% fleet "
+            f"coverage. Bypass rate {tsnap.get('bypass_rate')}. Next due: {nxt}. "
+            "Run `/red-team` to do today's pass.",
             alert=bool(tsnap.get("days_since_last") and tsnap["days_since_last"] > 30),
         )
     else:
+        nxt = (tsnap.get("next_due") or {}).get("id", "?") if tsnap else "?"
         tiles["red_team"] = _tile(
             "none yet", "last red-team", "manual", "no_data",
-            "No red-team campaigns logged yet. Justin logs the first one via "
-            "POST /api/pentagon/redteam-run — then this goes live.",
+            f"No campaigns logged yet. Run `/red-team` to do the first pass "
+            f"(next due: {nxt}) — logs via POST /api/pentagon/redteam-run.",
             recording_since=tsince)
 
     # --- five walls (0-100; None = not scored yet, rendered grey not zero) ---
@@ -267,10 +270,8 @@ def _build_walls(rsnap, csnap, bsnap, isnap, tsnap) -> list[dict]:
         walls.append(_wall("Vuln Response", None, "issues not fetched"))
     # Red-Team Coverage — fraction of expected targets with any run.
     if tsnap and tsnap.get("runs", 0) > 0:
-        cov = tsnap.get("coverage", {})
-        pct = round(100 * sum(1 for v in cov.values() if v) / max(1, len(cov)))
-        walls.append(_wall("Red-Team Coverage", pct,
-                           "share of targets with a logged campaign"))
+        walls.append(_wall("Red-Team Coverage", tsnap.get("coverage_pct", 0),
+                           "share of fleet targets with a logged campaign"))
     else:
         walls.append(_wall("Red-Team Coverage", None, "no campaigns yet"))
     # Dependency Hygiene — ZugaShield ships zero runtime deps by design. Verify

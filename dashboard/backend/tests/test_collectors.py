@@ -32,11 +32,15 @@ def test_redteam_ledger_empty_then_populated(fresh_db, monkeypatch, tmp_path):
     empty = asyncio.run(redteam_ledger.collect())
     assert empty.payload["runs"] == 0
 
-    redteam_ledger.append_run("zugashield", attempts=10, bypasses=1, by="justin")
+    # Mixed-case target must still register as covering the normalized id.
+    redteam_ledger.append_run("ZugaShield", attempts=10, bypasses=1, by="justin")
     full = asyncio.run(redteam_ledger.collect())
     assert full.payload["runs"] == 1
     assert full.payload["bypasses_total"] == 1
     assert full.payload["coverage"]["zugashield"] is True
-    assert full.payload["coverage"]["studios"] is False
+    assert full.payload["coverage"]["trader"] is False   # untested target
+    assert full.payload["coverage_pct"] > 0
+    # next_due should point at an untested tier-1 target, never zugashield.
+    assert full.payload["next_due"]["id"] != "zugashield"
     # A bypass on the latest run raises a feed event.
     assert any(e.kind == "redteam_bypass" for e in full.events)
