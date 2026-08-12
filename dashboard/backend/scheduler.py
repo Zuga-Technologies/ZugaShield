@@ -13,6 +13,7 @@ import time
 
 import db
 from collectors import REGISTRY
+from failure_reason import normalize
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +31,13 @@ async def run_one(collector_id: str, mod) -> None:
         db.record_run(collector_id, ok=True, latency_ms=latency, error=None)
     except Exception as e:
         latency = int((time.monotonic() - start) * 1000)
+        # Contract: collectors RAISE on failure by design, so this generic
+        # site cannot know the category — the raw error is preserved as
+        # `unknown: <raw>` (never guessed `internal:` — a GitHub timeout is
+        # not our code failing). Collectors adopt real slugs on-touch.
         db.record_run(collector_id, ok=False, latency_ms=latency,
-                      error=f"{type(e).__name__}: {e}")
+                      error=f"{type(e).__name__}: {e}",
+                      failure_reason=normalize(f"{type(e).__name__}: {e}"))
         logger.warning("collector %s failed: %s", collector_id, e)
 
 

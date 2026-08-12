@@ -77,6 +77,14 @@ def get_conn() -> sqlite3.Connection:
 def init_db() -> None:
     conn = get_conn()
     conn.executescript(SCHEMA)
+    # failure_reason contract (docs/fleet/FAILURE_REASON_CONTRACT.md):
+    # additive nullable column; duplicate-column on re-run is the expected
+    # steady state, anything else re-raises.
+    try:
+        conn.execute("ALTER TABLE collector_runs ADD COLUMN failure_reason TEXT")
+    except sqlite3.OperationalError as e:
+        if "duplicate column" not in str(e).lower():
+            raise
     conn.commit()
 
 
@@ -84,13 +92,15 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def record_run(collector: str, ok: bool, latency_ms: int | None, error: str | None) -> None:
+def record_run(collector: str, ok: bool, latency_ms: int | None, error: str | None,
+               failure_reason: str | None = None) -> None:
     conn = get_conn()
     now = _now_iso()
     conn.execute(
-        "INSERT INTO collector_runs (collector, ran_at, ok, latency_ms, error) "
-        "VALUES (?, ?, ?, ?, ?)",
-        (collector, now, 1 if ok else 0, latency_ms, error),
+        "INSERT INTO collector_runs (collector, ran_at, ok, latency_ms, error, "
+        "failure_reason) VALUES (?, ?, ?, ?, ?, ?)",
+        (collector, now, 1 if ok else 0, latency_ms, error,
+         None if ok else failure_reason),
     )
     conn.execute(
         "INSERT OR IGNORE INTO collector_first_seen (collector, first_at) VALUES (?, ?)",
@@ -135,10 +145,21 @@ def last_ok_run(collector: str) -> str | None:
 def last_run(collector: str) -> sqlite3.Row | None:
     conn = get_conn()
     return conn.execute(
-        "SELECT ran_at, ok, error FROM collector_runs WHERE collector = ? "
-        "ORDER BY ran_at DESC LIMIT 1",
+        "SELECT ran_at, ok, error, failure_reason FROM collector_runs "
+        "WHERE collector = ? ORDER BY ran_at DESC LIMIT 1",
         (collector,),
     ).fetchone()
+
+
+def last_failure_reason(collector: str) -> str | None:
+    """Newest slug-classified reason for this collector (contract surface)."""
+    conn = get_conn()
+    row = conn.execute(
+        "SELECT failure_reason FROM collector_runs WHERE collector = ? "
+        "AND failure_reason IS NOT NULL ORDER BY id DESC LIMIT 1",
+        (collector,),
+    ).fetchone()
+    return row["failure_reason"] if row else None
 
 
 def first_seen(collector: str) -> str | None:

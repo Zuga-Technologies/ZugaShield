@@ -333,5 +333,6 @@ def _sources() -> list[dict]:
             "last_run": last["ran_at"] if last else None,
             "ok": bool(last["ok"]) if last else None,
             "error": last["error"] if last else None,
+            "failure_reason": last["failure_reason"] if last else None,
         })
     return out
