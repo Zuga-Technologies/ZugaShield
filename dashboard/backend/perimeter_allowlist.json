@@ -1,0 +1,12 @@
+{
+  "_doc": "Routes that answer anonymous GETs ON PURPOSE. The perimeter collector flags every other 2xx/5xx it gets with no credentials. One entry per decided door: host and path accept fnmatch wildcards, but prefer exact paths so a new route under the same prefix still gets flagged. Every entry needs a why and who decided; an entry nobody can defend should be deleted, not kept.",
+  "routes": [
+    {"host": "pentagon.zugabot.ai", "path": "/", "why": "the dashboard page itself; reads stay open", "decided": "2026-08-06 Pentagon write-key decision (memory/projects/project_justin_cybersecurity_lane.md)"},
+    {"host": "pentagon.zugabot.ai", "path": "/api/pentagon/metrics", "why": "dashboard data; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/api/pentagon/redteam-coverage", "why": "red-team rotation read by the /red-team skill; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/domain/manifest", "why": "fleet domain-protocol manifest; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/domain/summary", "why": "fleet domain-protocol summary; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/health/live", "why": "liveness probe", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/api/health/live", "why": "liveness probe", "decided": "2026-08-06 Pentagon write-key decision"}
+  ]
+}

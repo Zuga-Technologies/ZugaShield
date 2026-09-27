@@ -18,6 +18,7 @@ _MODULES = (
     "benchmark",
     "github_issues",
     "redteam_ledger",
+    "perimeter",
 )
 
 # id -> module. Ordered so the metrics API can iterate deterministically.
