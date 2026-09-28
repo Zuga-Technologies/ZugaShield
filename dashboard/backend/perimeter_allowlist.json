@@ -7,6 +7,17 @@
     {"host": "pentagon.zugabot.ai", "path": "/domain/manifest", "why": "fleet domain-protocol manifest; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
     {"host": "pentagon.zugabot.ai", "path": "/domain/summary", "why": "fleet domain-protocol summary; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
     {"host": "pentagon.zugabot.ai", "path": "/health/live", "why": "liveness probe", "decided": "2026-08-06 Pentagon write-key decision"},
-    {"host": "pentagon.zugabot.ai", "path": "/api/health/live", "why": "liveness probe", "decided": "2026-08-06 Pentagon write-key decision"}
+    {"host": "pentagon.zugabot.ai", "path": "/api/health/live", "why": "liveness probe", "decided": "2026-08-06 Pentagon write-key decision"},
+
+    {"host": "api.zugabot.ai", "path": "/api/health/live", "why": "Spiritus liveness probe (56 bytes, status only)", "decided": "proposed 2026-09-27 from the first live sweep; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/auth/config", "why": "the login page needs the auth mode and provider ids before anyone is signed in. The ROUTE is public by design; its VALUE on 2026-09-27 (auth_mode dev = passwordless email login) is a separate finding", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/notifications/vapid-key", "why": "Web Push VAPID public key; public by definition (the browser needs it to subscribe)", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/personality/items", "why": "the 36 questions of the personality test (oejts-32+n4), no answers", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/commands", "why": "the studio's 4-command catalog (intent, description, args schema); no user data", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/lifecycle/status", "why": "drain flag + in-flight count for deploys (32 bytes)", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/domain/manifest", "why": "fleet domain-protocol manifest, same convention as the Pentagon's", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/domain/summary", "why": "studio-wide counts only (mood average, journal entries today, habits today), no one person's data. Note: the manifest says visibility owner, so this may belong behind auth instead", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "treasury-api.zugabot.ai", "path": "/health/live", "why": "Treasury liveness probe ({status, service}); everything else there answers 403", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "treasury-api.zugabot.ai", "path": "/api/health/live", "why": "Treasury liveness probe, same body", "decided": "proposed 2026-09-27; Buga's y on this PR"}
   ]
 }
