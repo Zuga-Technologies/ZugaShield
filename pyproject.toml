@@ -56,10 +56,10 @@ llamaindex = ["llama-index-core>=0.10.0"]
 crewai = ["crewai>=0.1.0"]
 
 # MCP
-mcp = ["mcp>=1.0.0"]
+mcp = ["mcp>=1.0.0,<2"]
 
 # Threat feed (auto-updating signatures)
-feed = ["httpx>=0.24.0", "minisign>=0.3.0"]
+feed = ["httpx>=0.24.0", "cryptography>=41.0.0"]
 
 # Code scanning
 semgrep = ["semgrep>=1.0.0"]
@@ -80,11 +80,11 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Zuga-luga/ZugaShield"
-Documentation = "https://zugashield.dev"
-Repository = "https://github.com/Zuga-luga/ZugaShield"
-Issues = "https://github.com/Zuga-luga/ZugaShield/issues"
-Changelog = "https://github.com/Zuga-luga/ZugaShield/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/Zuga-Technologies/ZugaShield"
+Documentation = "https://github.com/Zuga-Technologies/ZugaShield#readme"
+Repository = "https://github.com/Zuga-Technologies/ZugaShield"
+Issues = "https://github.com/Zuga-Technologies/ZugaShield/issues"
+Changelog = "https://github.com/Zuga-Technologies/ZugaShield/blob/master/CHANGELOG.md"
 
 [project.scripts]
 zugashield-mcp = "zugashield_mcp.server:main"

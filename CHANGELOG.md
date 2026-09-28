@@ -5,6 +5,29 @@ All notable changes to ZugaShield will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-09-27
+
+First PyPI publish of the 1.2 line. v1.2.0 and v1.2.1 were tagged and got
+GitHub Releases, but their PyPI uploads failed (no Trusted Publisher was
+registered), so PyPI stayed on 1.0.2. Everything listed under 1.2.1 and 1.2.0
+ships to PyPI for the first time in this release.
+
+### Fixed
+
+- The `feed` extra (and therefore `all`) could not be installed: it required
+  `minisign>=0.3.0`, and the newest `minisign` on PyPI is 0.1.0. It now requires
+  `cryptography`, which is the backend `zugashield.feed.signer` already tries
+  first. The optional `minisign` fallback in the signer is unchanged.
+- The `mcp` extra now caps `mcp<2`. The MCP SDK 2.x removed the low-level
+  `Server.list_tools()` decorator that `zugashield_mcp.server` uses, so an
+  uncapped install pulled `mcp` 2.x and `zugashield-mcp` crashed on startup.
+  Porting the server to the 2.x API is a separate change.
+- Project URLs on the PyPI page pointed at the old `Zuga-luga` org, a `main`
+  branch that does not exist, and an unregistered `zugashield.dev` docs domain.
+  They now point at `Zuga-Technologies/ZugaShield` on `master`.
+- Release pipeline: a GitHub Release is now only created after the PyPI publish
+  succeeds, and a failed release opens a `release-failure` issue (#19).
+
 ## [1.2.1] - 2026-08-07
 
 ### Fixed
