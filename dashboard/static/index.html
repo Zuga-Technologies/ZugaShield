@@ -276,7 +276,7 @@ function esc(s){
    collector that feeds it so a "stale" tile can show "last ok <age>" by
    looking up that collector's last_run in sources[]. This mirrors the
    real collector wiring in metrics.py (agentpool_rail, catalog, version,
-   benchmark, github_issues, redteam_ledger) rather than guessing. */
+   benchmark, github_issues, redteam_ledger, perimeter) rather than guessing. */
 const TILE_TO_SOURCE = {
   rail_status: 'agentpool_rail', rail_blocks: 'agentpool_rail',
   signatures: 'catalog', signature_mix: 'catalog',
@@ -284,11 +284,12 @@ const TILE_TO_SOURCE = {
   benchmark: 'benchmark',
   open_vulns: 'github_issues', oldest_open: 'github_issues',
   red_team: 'redteam_ledger',
+  perimeter: 'perimeter',
 };
 // Preferred display order; any tile keys the backend adds later still
 // render, just appended after these.
 const TILE_ORDER = [
-  'rail_status','rail_blocks','signatures','signature_mix','version',
+  'perimeter','rail_status','rail_blocks','signatures','signature_mix','version',
   'benchmark','open_vulns','oldest_open','red_team',
 ];
 

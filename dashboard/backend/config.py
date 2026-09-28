@@ -47,6 +47,24 @@ class Settings(BaseSettings):
     # forged by anyone who can reach the public URL). Empty = open (dev only).
     pentagon_write_key: str = ""
 
+    # --- perimeter collector (anonymous sweep of every public hostname) ---
+    # The Cloudflare tunnel's ingress list is the source of truth for which
+    # hostnames are public. Read on the Mac Mini, where the tunnel runs.
+    cloudflared_config_path: str = "~/.cloudflared/config.yml"
+    # The Zugabot backend has openapi switched off, so its route table comes
+    # from its own dumper (scripts/prune/route_dump.py). Its routes go in the
+    # probe pool even with no hostname of its own: a proxy host can forward to
+    # it (the 2026-09-27 mobile.zugabot.ai side door). Empty = skip it.
+    zugabot_repo_path: str = "~/Projects/Zugabot"
+    zugabot_python: str = ""  # empty = <repo>/backend/.venv/bin/python
+
+    # Hivemind ticket for Justin when the sweep finds an unknown open route.
+    # A teammate API key (X-API-Key) is preferred; the admin token works too.
+    # Neither set = no tickets, and the tile says so.
+    hivemind_url: str = "https://zuga-hivemind-production.up.railway.app"
+    hivemind_api_key: str = ""
+    hivemind_admin_token: str = ""
+
     @property
     def db_path(self) -> Path:
         p = Path(self.pentagon_db_path)

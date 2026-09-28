@@ -1,0 +1,340 @@
+{
+ "_doc": "Anonymous GET sweep of mobile.zugabot.ai, 2026-09-27 ~19:20 EDT, the side door (ZugaMobile serve.py proxied every /api/* to the Zugabot backend). Route table: Zugabot scripts/prune/route_dump.py at 986a26602 (191 routes, 104 GET, 65 param-free under /api/). Result: 53x200, 3x500, 6x401, 2x404, 1x502. The saved output kept the exact status of the 200s and 500s only; the other 9 are recorded as 401 with exact=false (all 9 were closed or broken, none open). Closed the same evening by removing the hostname from the tunnel.",
+ "host": "mobile.zugabot.ai",
+ "routes": [
+  {
+   "path": "/api/admin/access-codes",
+   "status": 500,
+   "bytes": 119
+  },
+  {
+   "path": "/api/auth/access-code-status",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/auth/cognito/status",
+   "status": 200,
+   "bytes": 403
+  },
+  {
+   "path": "/api/auth/has-fastpass",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/auth/me",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/auth/oauth/callback",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/auth/oauth/providers",
+   "status": 200,
+   "bytes": 130
+  },
+  {
+   "path": "/api/auth/providers",
+   "status": 200,
+   "bytes": 78
+  },
+  {
+   "path": "/api/autonomous/management/actions",
+   "status": 200,
+   "bytes": 23517
+  },
+  {
+   "path": "/api/autonomous/management/actions/stats",
+   "status": 200,
+   "bytes": 217
+  },
+  {
+   "path": "/api/autonomous/management/loops/status",
+   "status": 500,
+   "bytes": 72
+  },
+  {
+   "path": "/api/budget/history",
+   "status": 200,
+   "bytes": 1213
+  },
+  {
+   "path": "/api/budget/month",
+   "status": 200,
+   "bytes": 722
+  },
+  {
+   "path": "/api/budget/recommendations",
+   "status": 200,
+   "bytes": 29164
+  },
+  {
+   "path": "/api/budget/status",
+   "status": 200,
+   "bytes": 16722
+  },
+  {
+   "path": "/api/budget/today",
+   "status": 200,
+   "bytes": 723
+  },
+  {
+   "path": "/api/budget/today-rollup",
+   "status": 200,
+   "bytes": 723
+  },
+  {
+   "path": "/api/code/metrics",
+   "status": 200,
+   "bytes": 3607
+  },
+  {
+   "path": "/api/code/tasks",
+   "status": 200,
+   "bytes": 54200
+  },
+  {
+   "path": "/api/minichat/proactive_threads/open",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/minichat/proactive_threads/rules",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/minichat/proactive_threads/sent",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/reviews/autonomous-queue",
+   "status": 200,
+   "bytes": 12
+  },
+  {
+   "path": "/api/reviews/operator-goals",
+   "status": 200,
+   "bytes": 105
+  },
+  {
+   "path": "/api/reviews/opportunities",
+   "status": 200,
+   "bytes": 30105
+  },
+  {
+   "path": "/api/reviews/safe-class-log",
+   "status": 200,
+   "bytes": 14
+  },
+  {
+   "path": "/api/schedule/now",
+   "status": 500,
+   "bytes": 119
+  },
+  {
+   "path": "/api/shield/anomaly-score",
+   "status": 200,
+   "bytes": 113
+  },
+  {
+   "path": "/api/shield/audit",
+   "status": 200,
+   "bytes": 309
+  },
+  {
+   "path": "/api/shield/catalog/stats",
+   "status": 200,
+   "bytes": 277
+  },
+  {
+   "path": "/api/shield/dashboard",
+   "status": 200,
+   "bytes": 1994
+  },
+  {
+   "path": "/api/shield/intel/feeds",
+   "status": 200,
+   "bytes": 85
+  },
+  {
+   "path": "/api/shield/intel/pending",
+   "status": 200,
+   "bytes": 24
+  },
+  {
+   "path": "/api/shield/intel/status",
+   "status": 200,
+   "bytes": 719
+  },
+  {
+   "path": "/api/shield/status",
+   "status": 200,
+   "bytes": 486
+  },
+  {
+   "path": "/api/shield/threats",
+   "status": 200,
+   "bytes": 23
+  },
+  {
+   "path": "/api/x402/agent-info",
+   "status": 200,
+   "bytes": 799
+  },
+  {
+   "path": "/api/x402/agent/health",
+   "status": 200,
+   "bytes": 110
+  },
+  {
+   "path": "/api/x402/agent/services",
+   "status": 200,
+   "bytes": 8900
+  },
+  {
+   "path": "/api/x402/agent/wallet",
+   "status": 200,
+   "bytes": 317
+  },
+  {
+   "path": "/api/x402/analytics/export",
+   "status": 200,
+   "bytes": 1047
+  },
+  {
+   "path": "/api/x402/analytics/goal",
+   "status": 200,
+   "bytes": 705
+  },
+  {
+   "path": "/api/x402/analytics/health",
+   "status": 200,
+   "bytes": 87
+  },
+  {
+   "path": "/api/x402/analytics/recent",
+   "status": 200,
+   "bytes": 502
+  },
+  {
+   "path": "/api/x402/analytics/revenue/daily",
+   "status": 200,
+   "bytes": 57
+  },
+  {
+   "path": "/api/x402/analytics/revenue/period",
+   "status": 200,
+   "bytes": 39
+  },
+  {
+   "path": "/api/x402/analytics/revenue/total",
+   "status": 200,
+   "bytes": 69
+  },
+  {
+   "path": "/api/x402/analytics/services",
+   "status": 200,
+   "bytes": 366
+  },
+  {
+   "path": "/api/x402/analytics/summary",
+   "status": 200,
+   "bytes": 128
+  },
+  {
+   "path": "/api/x402/badge.svg",
+   "status": 200,
+   "bytes": 576
+  },
+  {
+   "path": "/api/x402/ci-guide",
+   "status": 200,
+   "bytes": 1471
+  },
+  {
+   "path": "/api/x402/domain/manifest",
+   "status": 200,
+   "bytes": 59
+  },
+  {
+   "path": "/api/x402/domain/summary",
+   "status": 200,
+   "bytes": 442
+  },
+  {
+   "path": "/api/x402/manifest",
+   "status": 200,
+   "bytes": 14794
+  },
+  {
+   "path": "/api/x402/progress",
+   "status": 200,
+   "bytes": 236
+  },
+  {
+   "path": "/api/x402/services",
+   "status": 200,
+   "bytes": 7924
+  },
+  {
+   "path": "/api/x402/webhook/health",
+   "status": 200,
+   "bytes": 75
+  },
+  {
+   "path": "/api/x402/worker/health",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/x402/worker/info",
+   "status": 401,
+   "bytes": 0,
+   "exact": false
+  },
+  {
+   "path": "/api/x402/worker/queue/my-tasks",
+   "status": 200,
+   "bytes": 57
+  },
+  {
+   "path": "/api/x402/worker/queue/status",
+   "status": 200,
+   "bytes": 169
+  },
+  {
+   "path": "/api/zugaclaw/metrics",
+   "status": 200,
+   "bytes": 123
+  },
+  {
+   "path": "/api/zugaclaw/receipts",
+   "status": 200,
+   "bytes": 41
+  },
+  {
+   "path": "/api/zugaclaw/rules",
+   "status": 200,
+   "bytes": 22
+  },
+  {
+   "path": "/api/zugaclaw/status",
+   "status": 200,
+   "bytes": 158
+  }
+ ]
+}

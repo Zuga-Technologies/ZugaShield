@@ -1,0 +1,23 @@
+{
+  "_doc": "Routes that answer anonymous GETs ON PURPOSE. The perimeter collector flags every other 2xx/5xx it gets with no credentials. One entry per decided door: host and path accept fnmatch wildcards, but prefer exact paths so a new route under the same prefix still gets flagged. Every entry needs a why and who decided; an entry nobody can defend should be deleted, not kept.",
+  "routes": [
+    {"host": "pentagon.zugabot.ai", "path": "/", "why": "the dashboard page itself; reads stay open", "decided": "2026-08-06 Pentagon write-key decision (memory/projects/project_justin_cybersecurity_lane.md)"},
+    {"host": "pentagon.zugabot.ai", "path": "/api/pentagon/metrics", "why": "dashboard data; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/api/pentagon/redteam-coverage", "why": "red-team rotation read by the /red-team skill; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/domain/manifest", "why": "fleet domain-protocol manifest; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/domain/summary", "why": "fleet domain-protocol summary; reads stay open", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/health/live", "why": "liveness probe", "decided": "2026-08-06 Pentagon write-key decision"},
+    {"host": "pentagon.zugabot.ai", "path": "/api/health/live", "why": "liveness probe", "decided": "2026-08-06 Pentagon write-key decision"},
+
+    {"host": "api.zugabot.ai", "path": "/api/health/live", "why": "Spiritus liveness probe (56 bytes, status only)", "decided": "proposed 2026-09-27 from the first live sweep; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/auth/config", "why": "the login page needs the auth mode and provider ids before anyone is signed in. The ROUTE is public by design; its VALUE matters: auth_mode dev = passwordless email login. It read dev until 2026-09-27 ~20:15 EDT, switched to password the same evening (Buga y). If it ever reads dev again, that is a finding", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/notifications/vapid-key", "why": "Web Push VAPID public key; public by definition (the browser needs it to subscribe)", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/personality/items", "why": "the 36 questions of the personality test (oejts-32+n4), no answers", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/commands", "why": "the studio's 4-command catalog (intent, description, args schema); no user data", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/api/spiritus/lifecycle/status", "why": "drain flag + in-flight count for deploys (32 bytes)", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/domain/manifest", "why": "fleet domain-protocol manifest, same convention as the Pentagon's", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "api.zugabot.ai", "path": "/domain/summary", "why": "studio-wide counts only (mood average, journal entries today, habits today), no one person's data. Note: the manifest says visibility owner, so this may belong behind auth instead", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "treasury-api.zugabot.ai", "path": "/health/live", "why": "Treasury liveness probe ({status, service}); everything else there answers 403", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+    {"host": "treasury-api.zugabot.ai", "path": "/api/health/live", "why": "Treasury liveness probe, same body", "decided": "proposed 2026-09-27; Buga's y on this PR"}
+  ]
+}

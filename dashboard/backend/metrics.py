@@ -215,6 +215,35 @@ def build() -> dict:
             f"(next due: {nxt}) — logs via POST /api/pentagon/redteam-run.",
             recording_since=tsince)
 
+    # --- public perimeter (LIVE) ---
+    pstate, psnap, psince = _collector_state("perimeter")
+    if psnap:
+        unknown = psnap.get("unknown_open", [])
+        suspect = psnap.get("unknown_suspect", [])
+        tk = psnap.get("ticketing", {})
+        detail = (
+            f"Swept {len(psnap.get('hosts', {}))} public hostname(s) x "
+            f"{psnap.get('paths_probed', 0)} GET routes with no credentials at "
+            f"{psnap.get('swept_at')}. {len(psnap.get('allowed_open', []))} open by "
+            f"design (perimeter_allowlist.json), {len(unknown)} unknown open, "
+            f"{len(suspect)} answering 5xx.")
+        if unknown or suspect:
+            detail += (" Unknown: " + ", ".join(
+                f"{r['host']}{r['path']} ({r['status']})" for r in unknown + suspect) +
+                ". Fix: put auth on it or take the hostname off the tunnel; if it is "
+                "public on purpose, add it to perimeter_allowlist.json with a why.")
+            detail += (f" Tickets: {', '.join(f'#{t}' for t in tk.get('tickets', []))}."
+                       if tk.get("tickets") else
+                       " No ticket filed: " + (tk.get("error") or
+                                               "no hivemind key in dashboard/backend/.env") + ".")
+        tiles["perimeter"] = _tile(
+            f"{len(unknown)} unknown open", "public perimeter", "live", pstate,
+            detail, alert=bool(unknown or suspect))
+    else:
+        tiles["perimeter"] = _tile("—", "public perimeter", "live", "no_data",
+                                   "Perimeter sweep hasn't run yet.",
+                                   recording_since=psince)
+
     # --- five walls (0-100; None = not scored yet, rendered grey not zero) ---
     walls = _build_walls(rsnap, csnap, bsnap, isnap, tsnap)
 
@@ -229,6 +258,10 @@ def build() -> dict:
         red_reasons.append("shield rail is DOWN")
     if crit_open:
         red_reasons.append(f"{crit_open} open CRITICAL issue(s)")
+    # A fresh sweep that got a 2xx from an unlisted route: a door is open now.
+    if psnap and pstate == "ok" and psnap.get("unknown_open"):
+        red_reasons.append(f"{len(psnap['unknown_open'])} unknown open route(s) "
+                           "on the public perimeter")
     posture = _posture(tiles, red_reasons)
 
     return {
