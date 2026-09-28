@@ -131,14 +131,22 @@ def build() -> dict:
     # --- version drift (LIVE) ---
     vstate, vsnap, vsince = _collector_state("version")
     if vsnap:
+        unpub = vsnap.get("unpublished")
+        if unpub:
+            ticket = f" Ticket #{unpub['ticket']}." if unpub.get("ticket") else ""
+            fix = (f"Release {unpub['tag']} is tagged on GitHub but PyPI still serves "
+                   f"{unpub['pypi']}: the PyPI publish failed. Check the Release "
+                   f"workflow run; `invalid-publisher` means a PyPI owner must re-add "
+                   f"the Trusted Publisher.{ticket}")
+        else:
+            fix = ("Fix: bump _version.py to the catalog version and cut a git tag "
+                   "(arms the PyPI release). Release decision — Justin/Buga.")
         tiles["version"] = _tile(
             f"pkg {vsnap.get('package')} / cat {vsnap.get('catalog')}",
             "version coherence",
             "live", vstate,
             f"Package {vsnap.get('package')}, catalog {vsnap.get('catalog')}, "
-            f"PyPI {vsnap.get('pypi')}, latest tag {vsnap.get('latest_tag')}. "
-            "Fix: bump _version.py to the catalog version and cut a git tag "
-            "(arms the PyPI release). Release decision — Justin/Buga.",
+            f"PyPI {vsnap.get('pypi')}, latest tag {vsnap.get('latest_tag')}. " + fix,
             alert=not vsnap.get("coherent"),
         )
     else:
