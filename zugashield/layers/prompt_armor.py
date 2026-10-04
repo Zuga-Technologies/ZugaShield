@@ -202,6 +202,12 @@ _TAG_CHARS = re.compile(r"[\U000e0001-\U000e007f]")
 # =============================================================================
 # Gap 2: Few-Shot Poisoning Detection Patterns
 # =============================================================================
+# PA-FLOOD-REPEAT: the top word must be this share of all words (and >100x).
+_FLOOD_REPEAT_RATIO = 0.25
+_FLOOD_REPEAT_MIN_WORDS = 100
+# PA-GLITCH-ENTROPY: wrapper characters stripped before the benign-token skips.
+_ENTROPY_WRAP_CHARS = "()[]{}<>\"'`,.;:*_~!?|"
+
 _FEWSHOT_ROLE_PATTERNS = [
     re.compile(r"(?:^|\n)\s*(?:User|Human|System|Assistant|AI|Bot)\s*:", re.I | re.MULTILINE),
     re.compile(r"(?:^|\n)\s*\[(?:User|Human|System|Assistant|AI|Bot)\]\s*", re.I | re.MULTILINE),
@@ -961,22 +967,29 @@ class PromptArmorLayer:
                 )
             )
 
-        # Word repetition detection
+        # Word repetition detection.
+        # A ratio, not a raw count: any long ordinary document repeats "the"
+        # 100+ times. Punctuation-only tokens (markdown table pipes, "---")
+        # are not words and are ignored. A real flood is dominated by one word.
         if len(text) > 500:
-            words = text.lower().split()
-            if words:
-                from collections import Counter
+            from collections import Counter
 
+            words = [w for w in text.lower().split() if any(c.isalnum() for c in w)]
+            if len(words) >= _FLOOD_REPEAT_MIN_WORDS:
                 word_counts = Counter(words)
                 most_common_word, most_common_count = word_counts.most_common(1)[0]
-                if most_common_count > 100:
+                ratio = most_common_count / len(words)
+                if most_common_count > 100 and ratio > _FLOOD_REPEAT_RATIO:
                     threats.append(
                         ThreatDetection(
                             category=ThreatCategory.PROMPT_INJECTION,
                             level=ThreatLevel.HIGH,
                             verdict=ShieldVerdict.QUARANTINE,
-                            description=f"Word repetition flooding: '{most_common_word}' repeated {most_common_count}x",
-                            evidence=f"'{most_common_word}' x{most_common_count}",
+                            description=(
+                                f"Word repetition flooding: '{most_common_word}' repeated "
+                                f"{most_common_count}x ({ratio:.0%} of {len(words)} words)"
+                            ),
+                            evidence=f"'{most_common_word}' x{most_common_count} ({ratio:.0%})",
                             layer=self.LAYER_NAME,
                             confidence=0.85,
                             suggested_action="Reject repetitive flooding input",
@@ -1074,7 +1087,7 @@ class PromptArmorLayer:
         if special_seq:
             seq = special_seq.group(0)
             # Exclude common patterns: URLs, file paths, markdown
-            if not re.match(r"^[-=_*#/\\:.]+$", seq):
+            if not re.match(r"^[-=_*#/\\:.|]+$", seq):
                 threats.append(
                     ThreatDetection(
                         category=ThreatCategory.PROMPT_INJECTION,
@@ -1092,8 +1105,14 @@ class PromptArmorLayer:
         # Shannon entropy per word
         words = text.split()
         high_entropy_words = []
-        for word in words:
+        for raw_word in words:
+            # Strip wrapping punctuation/markdown so `path`, (url), "abc" and
+            # **bold** are judged by their content, not their wrapper.
+            word = raw_word.strip(_ENTROPY_WRAP_CHARS)
             if len(word) <= 8:
+                continue
+            # Path-like tokens (contain a slash or backslash) are ordinary in docs.
+            if "/" in word or chr(92) in word:
                 continue
             # Skip known high-entropy but benign patterns
             if re.match(r"^(?:https?://|ftp://|www\.)", word):
