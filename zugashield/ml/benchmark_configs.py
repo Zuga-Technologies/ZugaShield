@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from zugashield.ml.hub_pins import DATASET_REVISIONS
+
 
 @dataclass
 class BenchConfig:
@@ -139,7 +141,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
 
     # Original 5 datasets (always included)
     try:
-        ds = load_dataset("deepset/prompt-injections", split="train")
+        ds = load_dataset(
+            "deepset/prompt-injections", split="train",
+            revision=DATASET_REVISIONS["deepset/prompt-injections"],
+        )
         for row in ds:
             texts.append(row["text"])
             labels.append(1 if row["label"] == 1 else 0)
@@ -147,7 +152,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
         pass
 
     try:
-        ds = load_dataset("Lakera/gandalf_ignore_instructions", split="train")
+        ds = load_dataset(
+            "Lakera/gandalf_ignore_instructions", split="train",
+            revision=DATASET_REVISIONS["Lakera/gandalf_ignore_instructions"],
+        )
         for row in ds:
             text = row.get("text", row.get("prompt", ""))
             if text:
@@ -157,7 +165,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
         pass
 
     try:
-        ds = load_dataset("rubend18/ChatGPT-Jailbreak-Prompts", split="train")
+        ds = load_dataset(
+            "rubend18/ChatGPT-Jailbreak-Prompts", split="train",
+            revision=DATASET_REVISIONS["rubend18/ChatGPT-Jailbreak-Prompts"],
+        )
         for row in ds:
             text = row.get("Prompt", "")
             if text and len(text) > 20:
@@ -167,7 +178,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
         pass
 
     try:
-        ds = load_dataset("JailbreakBench/JBB-Behaviors", "behaviors", split="harmful")
+        ds = load_dataset(
+            "JailbreakBench/JBB-Behaviors", "behaviors", split="harmful",
+            revision=DATASET_REVISIONS["JailbreakBench/JBB-Behaviors"],
+        )
         for row in ds:
             text = row.get("Goal", "")
             if text and len(text) > 10:
@@ -177,7 +191,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
         pass
 
     try:
-        ds = load_dataset("jackhhao/jailbreak-classification", split="train")
+        ds = load_dataset(
+            "jackhhao/jailbreak-classification", split="train",
+            revision=DATASET_REVISIONS["jackhhao/jailbreak-classification"],
+        )
         for row in ds:
             text = row.get("prompt", "")
             label_type = row.get("type", "")
@@ -190,7 +207,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
     # New datasets (conditionally included)
     if config.include_spml:
         try:
-            ds = load_dataset("reshabhs/SPML_Chatbot_Prompt_Injection", split="train")
+            ds = load_dataset(
+                "reshabhs/SPML_Chatbot_Prompt_Injection", split="train",
+                revision=DATASET_REVISIONS["reshabhs/SPML_Chatbot_Prompt_Injection"],
+            )
             count = 0
             for row in ds:
                 if config.spml_cap and count >= config.spml_cap:
@@ -206,7 +226,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
 
     if config.include_mosscap:
         try:
-            ds = load_dataset("Lakera/mosscap_prompt_injection", split="train")
+            ds = load_dataset(
+                "Lakera/mosscap_prompt_injection", split="train",
+                revision=DATASET_REVISIONS["Lakera/mosscap_prompt_injection"],
+            )
             count = 0
             for row in ds:
                 if count >= config.mosscap_cap:
@@ -228,7 +251,10 @@ def _load_datasets(config: BenchConfig) -> tuple[list[str], list[int]]:
 
     if config.include_safeguard:
         try:
-            ds = load_dataset("xTRam1/safe-guard-prompt-injection", split="train")
+            ds = load_dataset(
+                "xTRam1/safe-guard-prompt-injection", split="train",
+                revision=DATASET_REVISIONS["xTRam1/safe-guard-prompt-injection"],
+            )
             for row in ds:
                 text = row.get("text", row.get("prompt", ""))
                 label = row.get("label", None)
@@ -371,11 +397,17 @@ def _evaluate_coverage(model_path: str) -> dict[str, Any]:
     ml_layer._stats["canary_passed"] = True
 
     # Load test datasets
-    ds_deepset = load_dataset("deepset/prompt-injections", split="train")
+    ds_deepset = load_dataset(
+        "deepset/prompt-injections", split="train",
+        revision=DATASET_REVISIONS["deepset/prompt-injections"],
+    )
     deepset_inj = [row["text"] for row in ds_deepset if row["label"] == 1]
     deepset_ben = [row["text"] for row in ds_deepset if row["label"] == 0]
 
-    ds_gandalf = load_dataset("Lakera/gandalf_ignore_instructions", split="train")
+    ds_gandalf = load_dataset(
+        "Lakera/gandalf_ignore_instructions", split="train",
+        revision=DATASET_REVISIONS["Lakera/gandalf_ignore_instructions"],
+    )
     gandalf = [row.get("text", row.get("prompt", "")) for row in ds_gandalf if row.get("text", row.get("prompt", ""))]
 
     def run(coro: Any) -> Any:

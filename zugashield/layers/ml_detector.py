@@ -34,6 +34,7 @@ import json
 import logging
 import os
 import time
+import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast, TYPE_CHECKING
 
@@ -282,7 +283,20 @@ class MLDetectorLayer:
                     return
 
                 try:
-                    loaded = joblib.load(model_path)
+                    # scikit-learn warns whenever a pickle's version differs from
+                    # the running one. The bundled model is deliberately saved
+                    # with the OLDEST supported scikit-learn (pickles load
+                    # forward, not backward), so this fires on most installs.
+                    # The hash check above and the canaries below are the real
+                    # verification; keep the version note in our log, not stderr.
+                    with warnings.catch_warnings(record=True) as caught:
+                        warnings.simplefilter("always")
+                        loaded = joblib.load(model_path)
+                    for w in caught:
+                        if w.category.__name__ == "InconsistentVersionWarning":
+                            logger.info("[MLDetector] %s", str(w.message).splitlines()[0])
+                        else:
+                            warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
 
                     # Detect model format: v2.0 bundle (dict) vs v1.0 pipeline
                     if isinstance(loaded, dict) and "tfidf" in loaded and "clf" in loaded:

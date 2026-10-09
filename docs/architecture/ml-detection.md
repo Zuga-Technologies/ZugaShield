@@ -370,14 +370,16 @@ If the model file is missing, fails hash verification, fails canary validation, 
 
 ## Retraining the Model
 
-The training script can be run at any time to produce a new model from the latest versions of the public datasets:
+The training script can be run at any time to produce a new model from the pinned versions of the public datasets:
 
 ```bash
 pip install zugashield[ml-train]  # adds datasets, scikit-learn, joblib, scipy
 python -m zugashield.ml.train_tfidf
 ```
 
-The script downloads datasets from HuggingFace Hub, applies the 5K and 5K caps to SPML and mosscap respectively, balances the class distribution, fits the TF-IDF vectorizer and logistic regression, runs 5-fold cross-validation, and saves the bundle to `zugashield/models/tfidf_injection.joblib`.
+**Run it on the oldest scikit-learn the `ml-light` extra allows** (`scikit-learn>=1.5` in `pyproject.toml`). Pickles load forward, not backward: a bundle saved by a newer scikit-learn loads on older installs but may fail at predict time. The 1.2.2 model was saved by 1.8.0 (Python >= 3.11 only) and silently failed on Python 3.10, where pip resolves 1.7. `tests/unit/test_bundled_model.py` runs on every Python in the CI matrix to catch that; the bundle's `__zugashield_meta__` records `sklearn_version`.
+
+The script downloads datasets from HuggingFace Hub at the commits pinned in `zugashield/ml/hub_pins.py` (bump a pin there to train on newer data; `python -m zugashield.ml.hub_pins` shows which repos moved), applies the 5K and 5K caps to SPML and mosscap respectively, balances the class distribution, fits the TF-IDF vectorizer and logistic regression, runs 5-fold cross-validation, and saves the bundle to `zugashield/models/tfidf_injection.joblib`.
 
 After retraining, update `zugashield/signatures/integrity.json` with the new file hash:
 

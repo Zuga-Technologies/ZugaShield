@@ -31,6 +31,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from zugashield.ml.hub_pins import DATASET_REVISIONS
+
 
 def distill(
     model_dir: str = "~/.zugashield/models",
@@ -103,7 +105,10 @@ def distill(
 
     # Benign conversational samples
     try:
-        ds = load_dataset("alespalla/chatbot_instruction_prompts", split="train")
+        ds = load_dataset(
+            "alespalla/chatbot_instruction_prompts", split="train",
+            revision=DATASET_REVISIONS["alespalla/chatbot_instruction_prompts"],
+        )
         for row in ds:
             if len(unlabeled) >= max_samples:
                 break

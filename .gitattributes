@@ -157,3 +157,4 @@ Pipfile.lock text eol=lf -diff
 .gitignore text eol=lf
 .editorconfig text eol=lf
 Makefile text eol=lf
+*.joblib binary

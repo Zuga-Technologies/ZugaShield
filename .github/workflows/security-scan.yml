@@ -4,7 +4,9 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Weekly on Monday at 6am UTC
   push:
-    branches: [main]
+    # The default branch is master. This said main until 2026-10-09, so the
+    # bandit gate only ever ran on the Monday schedule, never on a push.
+    branches: [master]
     paths:
       - 'zugashield/**'
       - 'pyproject.toml'

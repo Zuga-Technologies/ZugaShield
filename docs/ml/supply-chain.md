@@ -78,6 +78,28 @@ The `.joblib` bundle is validated for structural integrity on load:
 - `has_heuristic_features` must match `n_heuristic_features`
 - Feature dimensions must be consistent
 
+## Pinned Hub Revisions
+
+Everything the ML scripts fetch from Hugging Face Hub is pinned to a commit hash in `zugashield/ml/hub_pins.py`:
+
+| What | Where it is used |
+|------|------------------|
+| 9 training datasets | `train_tfidf.py` (the shipped model), `benchmark_configs.py` |
+| `alespalla/chatbot_instruction_prompts` | `distill.py` (pseudo-label corpus) |
+| 3 ONNX model repos (model + `tokenizer.json`) | `zugashield-ml download` |
+
+A Hub repo can be rewritten by its owner at any time. Without a pin, a retrain would silently learn from changed or relabelled rows and `zugashield-ml download` would install whatever model file is on `main` that day. With a pin, the bytes behind a given model version are fixed (Bandit B615 / CWE-494).
+
+```bash
+python -m zugashield.ml.hub_pins   # each pin beside the Hub's current main; exit 1 if any moved
+```
+
+To take newer data: paste the new hash into `hub_pins.py`, retrain, update `integrity.json`, and note the bump in the changelog.
+
+## Serialization Version
+
+The bundled `.joblib` is saved with the **oldest** scikit-learn the `ml-light` extra allows (`>=1.5`). scikit-learn pickles load forward, not backward: the 1.2.2 bundle was saved by 1.8.0 and, on Python 3.10 (scikit-learn 1.7), loaded but failed at predict time, so the canary check disabled the ML layer. `tests/unit/test_bundled_model.py` loads the bundle on every Python in CI, and the bundle metadata records `sklearn_version`.
+
 ## Benchmark Models
 
 The `benchmark_configs.py` script disables signature verification when evaluating candidate models:
@@ -98,4 +120,4 @@ Do not use `verify_signatures=False` in production.
 ZUGASHIELD_VERIFY_SIGNATURES=false
 ```
 
-Last Updated: 2026-02-17
+Last Updated: 2026-10-09
