@@ -51,7 +51,10 @@ jobs:
         run: pip install -e ".[all,dev]"
 
       - name: Run pip-audit
-        run: pip-audit --strict --desc
+        # --skip-editable: zugashield itself is installed editable above. Without
+        # the flag pip-audit looks the package up on PyPI and fails on any version
+        # bump that is not published yet (1.2.3 on 2026-10-09 went red for that).
+        run: pip-audit --strict --desc --skip-editable
 
   bandit:
     name: Bandit Security Linter
