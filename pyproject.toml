@@ -40,7 +40,11 @@ litellm = ["litellm>=1.0.0"]
 
 # Enhanced detection
 homoglyphs = ["confusable-homoglyphs>=3.0.0"]
-ml-light = ["scikit-learn>=1.3.0", "joblib>=1.3.0"]
+# The bundled TF-IDF model is saved with scikit-learn 1.7 and verified to load
+# and score identically on 1.5 through 1.8 (tests/unit/test_bundled_model.py);
+# 1.4 cannot read it. Pickles load forward, not backward: retrain with the
+# oldest version allowed here, never a newer one.
+ml-light = ["scikit-learn>=1.5", "joblib>=1.3.0"]
 ml = ["onnxruntime>=1.16.0", "tokenizers>=0.19.0"]
 ml-train = ["zugashield[ml-light]", "datasets>=2.14.0"]
 

@@ -5,6 +5,43 @@ All notable changes to ZugaShield will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The bundled TF-IDF model did not work on Python 3.10. It had been saved by
+  scikit-learn 1.8.0, which only exists for Python >= 3.11. On 3.10 pip
+  resolves scikit-learn 1.7.x: the pickle still loaded, `predict_proba` raised
+  `'LogisticRegression' object has no attribute 'multi_class'` (1.8 removed
+  that parameter), the canary check refused the model, and the ML layer ran
+  silently disabled behind a single log warning. The same weights are now
+  re-serialized with scikit-learn 1.7.2 and verified to score identically on
+  1.5.2, 1.6.1, 1.7.2 and 1.8.0 (the file is 2.8 MB instead of 4.3 MB because
+  the vocabulary indexes are plain ints). `integrity.json` carries the new
+  hash, the bundle's metadata records `sklearn_version` and `python_version`,
+  and `tests/unit/test_bundled_model.py` turns a model that fails to load into
+  a red CI job on every Python in the matrix. The `ml-light` extra now requires
+  `scikit-learn>=1.5`: 1.4 cannot read the bundle (it could not read the old
+  one either, it just failed quietly).
+- scikit-learn's version-mismatch warning on model load now goes to the
+  `zugashield` logger at INFO instead of stderr. The bundled model is saved
+  with the oldest supported scikit-learn on purpose, so the warning fires on
+  most installs; the hash and canary checks are the real verification.
+
+### Security
+
+- Every Hugging Face Hub download in the ML scripts is pinned to a commit hash
+  (`zugashield/ml/hub_pins.py`): the 9 training datasets in `train_tfidf.py`,
+  the 10 dataset loads in `benchmark_configs.py`, the corpus in `distill.py`,
+  and the ONNX model and tokenizer fetched by `zugashield-ml download`. An
+  unpinned download trains or ships whatever the repo owner has pushed since.
+  Bandit flagged 12 of these as B615 (CWE-494) and the weekly Security Scan was
+  red; `train_tfidf.py`'s 9 were invisible to Bandit because `load_dataset` is
+  passed in as an argument there. `python -m zugashield.ml.hub_pins` compares
+  each pin with the Hub's current `main`.
+- The Security Scan workflow now runs on pushes to `master`. It was wired to a
+  `main` branch that does not exist, so it only ever ran on the Monday schedule.
+
 ## [1.2.2] - 2026-09-27
 
 First PyPI publish of the 1.2 line. v1.2.0 and v1.2.1 were tagged and got

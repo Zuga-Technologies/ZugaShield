@@ -9,6 +9,6 @@
   "unicode_smuggling.json": "43e08e8047bad36e6bfc3e85f5a71ec313dd06ffe7f1799dbb48035d5df947d1",
   "wallet_attacks.json": "48a62393592ad3dcf1ec89c913785a572b268963534313a2e54be545cb5b989a",
   "_models": {
-    "tfidf_injection.joblib": "8eb0af71f7a50e020b24d8a368de2cb6a5ceff44f89571810ab6801f7604d968"
+    "tfidf_injection.joblib": "f62f41afc1f2245ec8af1653344f01dd54ba43af7d669d2dec0474efac7c0ae2"
   }
 }
