@@ -10,6 +10,18 @@ Usage:
     python -m zugashield.ml.train_tfidf
     python -m zugashield.ml.train_tfidf --output ./my_model.joblib
 
+Save with the OLDEST supported scikit-learn:
+    Pickles load forward, not backward. The ``ml-light`` extra allows
+    scikit-learn >=1.5, so run this script on the lowest version you want
+    installs to work with. The 1.2.2 model was saved by scikit-learn 1.8.0
+    (Python >=3.11 only) and silently failed on Python 3.10, where pip
+    resolves 1.7. ``tests/unit/test_bundled_model.py`` is the guard; the
+    bundle records ``sklearn_version`` in its metadata.
+
+Datasets are pinned to Hub commits in ``zugashield.ml.hub_pins``. Bump a pin
+there (``python -m zugashield.ml.hub_pins`` shows what moved) before retraining
+on newer data.
+
 Why ``char_wb`` analyzer:
     Character n-grams within word boundaries survive obfuscation:
     - Leetspeak: "1gnore" shares trigrams with "ignore"
@@ -33,10 +45,13 @@ Datasets (9 total, ~20,000+ samples):
 from __future__ import annotations
 
 import argparse
+import platform
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from zugashield.ml.hub_pins import DATASET_REVISIONS
 
 
 def _load_original_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
@@ -46,7 +61,10 @@ def _load_original_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
 
     # Dataset 1: deepset/prompt-injections
     try:
-        ds = load_dataset("deepset/prompt-injections", split="train")
+        ds = load_dataset(
+            "deepset/prompt-injections", split="train",
+            revision=DATASET_REVISIONS["deepset/prompt-injections"],
+        )
         for row in ds:
             texts.append(row["text"])
             labels.append(1 if row["label"] == 1 else 0)
@@ -56,7 +74,10 @@ def _load_original_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
 
     # Dataset 2: Lakera/gandalf_ignore_instructions
     try:
-        ds = load_dataset("Lakera/gandalf_ignore_instructions", split="train")
+        ds = load_dataset(
+            "Lakera/gandalf_ignore_instructions", split="train",
+            revision=DATASET_REVISIONS["Lakera/gandalf_ignore_instructions"],
+        )
         for row in ds:
             text = row.get("text", row.get("prompt", ""))
             if text:
@@ -68,7 +89,10 @@ def _load_original_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
 
     # Dataset 3: rubend18/ChatGPT-Jailbreak-Prompts
     try:
-        ds = load_dataset("rubend18/ChatGPT-Jailbreak-Prompts", split="train")
+        ds = load_dataset(
+            "rubend18/ChatGPT-Jailbreak-Prompts", split="train",
+            revision=DATASET_REVISIONS["rubend18/ChatGPT-Jailbreak-Prompts"],
+        )
         count = 0
         for row in ds:
             text = row.get("Prompt", "")
@@ -82,7 +106,10 @@ def _load_original_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
 
     # Dataset 4: JailbreakBench/JBB-Behaviors (NeurIPS 2024 benchmark)
     try:
-        ds = load_dataset("JailbreakBench/JBB-Behaviors", "behaviors", split="harmful")
+        ds = load_dataset(
+            "JailbreakBench/JBB-Behaviors", "behaviors", split="harmful",
+            revision=DATASET_REVISIONS["JailbreakBench/JBB-Behaviors"],
+        )
         count = 0
         for row in ds:
             text = row.get("Goal", "")
@@ -96,7 +123,10 @@ def _load_original_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
 
     # Dataset 5: jackhhao/jailbreak-classification (labeled jailbreak + benign)
     try:
-        ds = load_dataset("jackhhao/jailbreak-classification", split="train")
+        ds = load_dataset(
+            "jackhhao/jailbreak-classification", split="train",
+            revision=DATASET_REVISIONS["jackhhao/jailbreak-classification"],
+        )
         jb_count = 0
         benign_jh = 0
         for row in ds:
@@ -127,7 +157,10 @@ def _load_new_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
     # Capped at 5K to prevent dominating the training set (tuned via benchmark)
     spml_cap = 5000
     try:
-        ds = load_dataset("reshabhs/SPML_Chatbot_Prompt_Injection", split="train")
+        ds = load_dataset(
+            "reshabhs/SPML_Chatbot_Prompt_Injection", split="train",
+            revision=DATASET_REVISIONS["reshabhs/SPML_Chatbot_Prompt_Injection"],
+        )
         count = 0
         benign_count = 0
         for row in ds:
@@ -151,7 +184,10 @@ def _load_new_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
     # Schema: "level" (str like "Level 8"), "prompt" (text)
     # Take levels 4-8 only (harder attacks), cap at 5,000 samples
     try:
-        ds = load_dataset("Lakera/mosscap_prompt_injection", split="train")
+        ds = load_dataset(
+            "Lakera/mosscap_prompt_injection", split="train",
+            revision=DATASET_REVISIONS["Lakera/mosscap_prompt_injection"],
+        )
         count = 0
         max_mosscap = 5000
         for row in ds:
@@ -175,7 +211,10 @@ def _load_new_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
 
     # Dataset 8: xTRam1/safe-guard-prompt-injection (~10K categorical taxonomy)
     try:
-        ds = load_dataset("xTRam1/safe-guard-prompt-injection", split="train")
+        ds = load_dataset(
+            "xTRam1/safe-guard-prompt-injection", split="train",
+            revision=DATASET_REVISIONS["xTRam1/safe-guard-prompt-injection"],
+        )
         count = 0
         benign_count = 0
         for row in ds:
@@ -195,7 +234,10 @@ def _load_new_datasets(load_dataset: Any) -> tuple[list[str], list[int]]:
 
     # Dataset 9: qualifire/prompt-injections-benchmark (~5K, 2025 hard negatives)
     try:
-        ds = load_dataset("qualifire/prompt-injections-benchmark", split="train")
+        ds = load_dataset(
+            "qualifire/prompt-injections-benchmark", split="train",
+            revision=DATASET_REVISIONS["qualifire/prompt-injections-benchmark"],
+        )
         count = 0
         benign_count = 0
         for row in ds:
@@ -224,6 +266,7 @@ def train(output_path: str = "") -> None:
         print("Error: 'datasets' package required. Install: pip install zugashield[ml-train]")
         sys.exit(1)
 
+    import sklearn
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import cross_val_score
@@ -344,6 +387,10 @@ def train(output_path: str = "") -> None:
             "samples": len(texts),
             "cv_f1": float(scores.mean()),
             "datasets": dataset_names,
+            # What serialized this file. Pickles load forward, not backward,
+            # so this must be <= the ml-light floor in pyproject.toml.
+            "sklearn_version": sklearn.__version__,
+            "python_version": platform.python_version(),
         },
     }
 

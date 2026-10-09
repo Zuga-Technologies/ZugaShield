@@ -19,7 +19,9 @@ python -m zugashield.ml.train_tfidf
 python -m zugashield.ml.train_tfidf --output ./my_model.joblib
 ```
 
-The script loads 9 public Hugging Face datasets, builds the feature matrix, runs 5-fold cross-validation, and saves the model bundle. Training on a modern CPU takes 5-15 minutes depending on available RAM.
+The script loads 9 public Hugging Face datasets at the commits pinned in `zugashield/ml/hub_pins.py`, builds the feature matrix, runs 5-fold cross-validation, and saves the model bundle. Training on a modern CPU takes 5-15 minutes depending on available RAM.
+
+Train on the **oldest** scikit-learn that `pyproject.toml` allows for the `ml-light` extra (`>=1.5`). Pickles load forward, not backward; a bundle saved by a newer scikit-learn can load on an older install and still fail at predict time, which disables the ML layer. `tests/unit/test_bundled_model.py` checks the bundled file on every supported Python.
 
 Output:
 

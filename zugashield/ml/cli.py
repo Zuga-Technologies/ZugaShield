@@ -32,23 +32,30 @@ import time
 from pathlib import Path
 from typing import cast
 
+from zugashield.ml.hub_pins import MODEL_REVISIONS
+
 
 _DEFAULT_MODEL_DIR = "~/.zugashield/models"
 
-# Model registry: maps friendly names to HuggingFace repos
+# Model registry: maps friendly names to HuggingFace repos. Each download is
+# pinned to the commit in hub_pins.MODEL_REVISIONS so a rewritten Hub repo can
+# never change what this command installs.
 _MODELS = {
     "deberta-base": {
         "repo": "protectai/deberta-v3-base-prompt-injection",
+        "revision": MODEL_REVISIONS["protectai/deberta-v3-base-prompt-injection"],
         "description": "ProtectAI DeBERTa-base (233MB quantized, ~1s CPU)",
         "gated": False,
     },
     "prompt-guard-22m": {
         "repo": "meta-llama/Llama-Prompt-Guard-2-22M",
+        "revision": MODEL_REVISIONS["meta-llama/Llama-Prompt-Guard-2-22M"],
         "description": "Meta Prompt Guard 2 (22M params, ~80-200ms CPU, best accuracy/speed)",
         "gated": True,
     },
     "deberta-small": {
         "repo": "protectai/deberta-v3-small-prompt-injection-v2",
+        "revision": MODEL_REVISIONS["protectai/deberta-v3-small-prompt-injection-v2"],
         "description": "ProtectAI DeBERTa-small v2 (~100MB, pre-built ONNX available)",
         "gated": False,
     },
@@ -83,11 +90,12 @@ def cmd_download(args: argparse.Namespace) -> None:
 
     model_info = _MODELS[model_name]
     hf_repo = model_info["repo"]
+    hf_revision = cast("str", model_info["revision"])
     model_dir = _resolve_dir(args.model_dir)
 
     print(f"ZugaShield ML — Downloading models to {model_dir}")
     print(f"  Model: {model_name} ({model_info['description']})")
-    print(f"  Source: {hf_repo}")
+    print(f"  Source: {hf_repo} @ {hf_revision[:12]} (pinned commit)")
 
     # Check dependencies
     try:
@@ -109,7 +117,7 @@ def cmd_download(args: argparse.Namespace) -> None:
     export_dir = model_dir / "_export_tmp"
     try:
         model = ORTModelForSequenceClassification.from_pretrained(
-            hf_repo, export=True,
+            hf_repo, export=True, revision=hf_revision,
         )
         model.save_pretrained(str(export_dir))
         print("  ONNX export complete.")
@@ -134,6 +142,7 @@ def cmd_download(args: argparse.Namespace) -> None:
         tok_path = hf_hub_download(
             repo_id=cast(str, hf_repo),
             filename="tokenizer.json",
+            revision=hf_revision,
         )
         tokenizer_dest = model_dir / "tokenizer.json"
         shutil.copy2(tok_path, str(tokenizer_dest))
