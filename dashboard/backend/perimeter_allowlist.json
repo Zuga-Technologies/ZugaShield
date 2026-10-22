@@ -18,6 +18,9 @@
     {"host": "api.zugabot.ai", "path": "/domain/manifest", "why": "fleet domain-protocol manifest, same convention as the Pentagon's", "decided": "proposed 2026-09-27; Buga's y on this PR"},
     {"host": "api.zugabot.ai", "path": "/domain/summary", "why": "studio-wide counts only (mood average, journal entries today, habits today), no one person's data. Note: the manifest says visibility owner, so this may belong behind auth instead", "decided": "proposed 2026-09-27; Buga's y on this PR"},
     {"host": "treasury-api.zugabot.ai", "path": "/health/live", "why": "Treasury liveness probe ({status, service}); everything else there answers 403", "decided": "proposed 2026-09-27; Buga's y on this PR"},
-    {"host": "treasury-api.zugabot.ai", "path": "/api/health/live", "why": "Treasury liveness probe, same body", "decided": "proposed 2026-09-27; Buga's y on this PR"}
+    {"host": "treasury-api.zugabot.ai", "path": "/api/health/live", "why": "Treasury liveness probe, same body", "decided": "proposed 2026-09-27; Buga's y on this PR"},
+
+    {"host": "packs.zugabot.ai", "path": "/", "why": "free public Ludus guide packs file shelf (42-byte placeholder page); Ludus privacy doc promises no account, a sign-in would break every installed Ludus; static game-guide files only, no user data", "decided": "Buga 2026-10-20 (hivemind ticket 520)"},
+    {"host": "packs.zugabot.ai", "path": "/index.json", "why": "the list of guide packs Ludus downloads at startup; game names, sizes and hashes only", "decided": "Buga 2026-10-20 (hivemind ticket 520)"}
   ]
 }
