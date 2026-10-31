@@ -36,6 +36,11 @@ def _stale_threshold(cid: str) -> float:
     return max(settings.stale_after_seconds, interval * 1.5)
 
 
+# The benchmark collector only re-reads a file, so its run time says nothing
+# about the score's age. On 2026-10-31 an 85-day-old score still read "ok".
+BENCHMARK_MAX_AGE_SECONDS = 30 * 86400
+
+
 def _collector_state(cid: str) -> tuple[str, dict | None, str | None]:
     """Return (state, snapshot, recording_since). state is a coarse freshness
     read used as a fallback; individual tiles refine it (e.g. an available:False
@@ -157,6 +162,9 @@ def build() -> dict:
     # --- benchmark (COMPUTED) ---
     bstate, bsnap, bsince = _collector_state("benchmark")
     if bsnap and bsnap.get("available"):
+        bage = _age_seconds(bsnap.get("ran_at"))
+        if bstate == "ok" and (bage is None or bage > BENCHMARK_MAX_AGE_SECONDS):
+            bstate = "stale"
         tiles["benchmark"] = _tile(
             f"{round(bsnap.get('tpr',0)*100)}% TPR / {round(bsnap.get('fpr',0)*100,1)}% FPR",
             "detection accuracy",
@@ -164,7 +172,9 @@ def build() -> dict:
             f"Last benchmark {bsnap.get('ran_at')}: caught "
             f"{round(bsnap.get('tpr',0)*100)}% of {bsnap.get('attack_n')} attacks, "
             f"{round(bsnap.get('fpr',0)*100,1)}% false positives on "
-            f"{bsnap.get('benign_n')} benign. p95 {bsnap.get('p95_latency_ms')}ms.",
+            f"{bsnap.get('benign_n')} benign. p95 {bsnap.get('p95_latency_ms')}ms." +
+            (" Over 30 days old: rerun `python benchmarks/run.py --json "
+             "benchmarks/last_run.json`." if bstate == "stale" else ""),
         )
     else:
         tiles["benchmark"] = _tile(

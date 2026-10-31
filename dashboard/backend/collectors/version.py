@@ -167,8 +167,12 @@ async def collect() -> CollectResult:
     tag = _remote_latest_tag() or _latest_tag()
     pypi = await _pypi_version()
 
-    versions = {v for v in (pkg, catalog, pypi) if v}
-    coherent = len(versions) <= 1 and tag is not None
+    # The catalog versions the signatures; the package versions everything. A
+    # code-only release (1.2.3) leaves the catalog behind on purpose. Only a
+    # catalog AHEAD of the package is drift: signatures nobody has shipped.
+    catalog_ahead = bool(pkg and catalog and _vkey(catalog) > _vkey(pkg))
+    versions = {v for v in (pkg, pypi) if v}
+    coherent = len(versions) <= 1 and tag is not None and not catalog_ahead
 
     payload = {
         "package": pkg,
@@ -180,8 +184,8 @@ async def collect() -> CollectResult:
 
     events: list[Event] = []
     reasons = []
-    if pkg and catalog and pkg != catalog:
-        reasons.append(f"package {pkg} != catalog {catalog}")
+    if catalog_ahead:
+        reasons.append(f"catalog {catalog} is ahead of package {pkg}")
     if tag is None:
         reasons.append("no git tags — PyPI release workflow never triggers")
     if pypi is None:

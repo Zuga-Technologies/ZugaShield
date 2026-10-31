@@ -52,6 +52,11 @@ ALLOWLIST_PATH = Path(__file__).resolve().parent.parent / "perimeter_allowlist.j
 # Made-up paths. What a host returns for these is its catch-all answer.
 CANARIES = ("/pentagon-perimeter-canary", "/api/pentagon-perimeter-canary")
 
+# FastAPI's schema pages never list themselves in /openapi.json, so no route
+# source can ever add them. On 2026-10-31 they answered 200 on three hosts while
+# the sweep reported those hosts clean.
+SCHEMA_PATHS = ("/docs", "/redoc", "/openapi.json")
+
 CONCURRENCY = 6
 TIMEOUT = 10.0
 BODY_CAP = 65536       # bytes read per response (an SSE stream never ends)
@@ -105,11 +110,14 @@ def parse_tunnel_hosts(text: str) -> dict[str, int]:
 
 def unswept_hosts(text: str) -> list[dict]:
     """Published hostnames this sweep cannot probe (wildcards, non-HTTP
-    services). Listed in the payload so a blind spot is visible, not silent."""
+    services). Listed in the payload so a blind spot is visible, not silent.
+    An `http_status:` rule is a closed door, not a blind spot: the host's real
+    service is its own entry, and the closed paths are probed like any other."""
     return [{"hostname": e["hostname"], "service": e.get("service", "")}
             for e in _ingress_entries(text)
-            if e.get("hostname") and ("*" in e["hostname"]
-                                      or not _local_port(e.get("service", "")))]
+            if e.get("hostname")
+            and not e.get("service", "").startswith("http_status:")
+            and ("*" in e["hostname"] or not _local_port(e.get("service", "")))]
 
 
 # --- the routes: one pool from every service we can see ----------------------------
@@ -188,7 +196,7 @@ async def route_pool(client: httpx.AsyncClient, hosts: dict[str, int]) -> tuple[
     if settings.zugabot_repo_path:
         jobs.append(("zugabot backend route dump", dump_backend_routes))
 
-    pool: set[str] = set()
+    pool: set[str] = set(SCHEMA_PATHS)
     sources = []
     for name, fetch in jobs:
         src = {"source": name, "routes": 0}

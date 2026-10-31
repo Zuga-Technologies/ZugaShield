@@ -1,9 +1,9 @@
 {
-  "ran_at": "2026-08-07T19:57:08Z",
+  "ran_at": "2026-10-31T21:37:35Z",
   "tpr": 0.65,
   "fpr": 0.02727272727272727,
-  "avg_latency_ms": 9.772,
-  "p95_latency_ms": 5.763,
+  "avg_latency_ms": 10.824,
+  "p95_latency_ms": 4.638,
   "attack_n": 180,
   "benign_n": 110
 }
