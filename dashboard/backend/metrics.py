@@ -143,6 +143,8 @@ def build() -> dict:
                    f"{unpub['pypi']}: the PyPI publish failed. Check the Release "
                    f"workflow run; `invalid-publisher` means a PyPI owner must re-add "
                    f"the Trusted Publisher.{ticket}")
+        elif vsnap.get("coherent"):
+            fix = "All agree: a catalog behind the package is a code-only release."
         else:
             fix = ("Fix: bump _version.py to the catalog version and cut a git tag "
                    "(arms the PyPI release). Release decision — Justin/Buga.")
