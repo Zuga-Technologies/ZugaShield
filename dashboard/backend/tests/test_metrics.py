@@ -100,3 +100,24 @@ def test_domain_manifest_is_shield(fresh_db):
     assert out["studio_id"] == "shield"
     assert out["display_name"] == "The Pentagon"
     assert out["domain"] == "security"
+
+
+def _store_benchmark(ran_at):
+    db.store_snapshot("benchmark", {"available": True, "ran_at": ran_at, "tpr": 0.7,
+                                    "fpr": 0.02, "p95_latency_ms": 5, "attack_n": 180,
+                                    "benign_n": 110})
+    db.record_run("benchmark", ok=True, latency_ms=1, error=None)
+
+
+def test_old_benchmark_score_reads_stale_even_with_a_fresh_collector_run(fresh_db):
+    _store_benchmark("2026-08-07T19:57:08Z")
+    tile = metrics.build()["tiles"]["benchmark"]
+    assert tile["state"] == "stale"
+    assert "rerun" in tile["detail"]
+
+
+def test_recent_benchmark_score_reads_ok(fresh_db):
+    _store_benchmark(metrics._now_iso())
+    tile = metrics.build()["tiles"]["benchmark"]
+    assert tile["state"] == "ok"
+    assert "rerun" not in tile["detail"]

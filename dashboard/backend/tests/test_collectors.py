@@ -131,3 +131,20 @@ def test_redteam_ledger_empty_then_populated(fresh_db, monkeypatch, tmp_path):
     assert full.payload["next_due"]["id"] != "zugashield"
     # A bypass on the latest run raises a feed event.
     assert any(e.kind == "redteam_bypass" for e in full.events)
+
+
+def test_code_only_release_leaves_the_catalog_behind_without_drift(fresh_db, monkeypatch):
+    # v1.2.3 changed no signature, so the catalog stayed 1.2.2 on purpose. That
+    # read as drift and held the posture on amber.
+    _pin_versions(monkeypatch, "1.2.3", "1.2.2", "v1.2.3", "1.2.3")
+    result = asyncio.run(version.collect())
+    assert result.payload["coherent"] is True
+    assert not any(e.kind == "version_drift" for e in result.events)
+
+
+def test_catalog_ahead_of_the_package_is_still_drift(fresh_db, monkeypatch):
+    _pin_versions(monkeypatch, "1.2.3", "1.3.0", "v1.2.3", "1.2.3")
+    result = asyncio.run(version.collect())
+    assert result.payload["coherent"] is False
+    drift = [e for e in result.events if e.kind == "version_drift"]
+    assert drift and "ahead of package" in drift[0].line

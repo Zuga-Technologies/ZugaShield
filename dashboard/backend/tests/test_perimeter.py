@@ -219,3 +219,34 @@ def test_unknown_open_route_turns_posture_red(wired):
     assert out["tiles"]["perimeter"]["value"].startswith("53")
     assert out["posture"]["level"] == "red"
     assert "perimeter" in out["posture"]["reason"]
+
+
+def test_schema_pages_are_always_in_the_pool(fresh_db, tmp_path, monkeypatch):
+    # FastAPI never lists /docs, /redoc or /openapi.json in its own openapi
+    # document, so they answered 200 while the sweep read clean.
+    monkeypatch.setattr(perimeter, "_cache_path", lambda: tmp_path / "routes.json")
+    monkeypatch.setattr(settings, "zugabot_repo_path", "")
+
+    async def run():
+        transport = httpx.MockTransport(lambda r: httpx.Response(404))
+        async with httpx.AsyncClient(transport=transport) as client:
+            return await perimeter.route_pool(client, {"x.zugabot.ai": 8021})
+
+    pool, _ = asyncio.run(run())
+    assert {"/docs", "/redoc", "/openapi.json"} <= set(pool)
+
+
+def test_tunnel_404_rule_is_a_closed_door_not_a_blind_spot():
+    config = """\
+ingress:
+  - hostname: previz.zugabot.ai
+    path: ^/(health|docs)(/.*)?$
+    service: http_status:404
+  - hostname: previz.zugabot.ai
+    service: http://127.0.0.1:8021
+  - hostname: ssh.zugabot.ai
+    service: ssh://localhost:22
+  - service: http_status:404
+"""
+    assert perimeter.parse_tunnel_hosts(config) == {"previz.zugabot.ai": 8021}
+    assert [u["hostname"] for u in perimeter.unswept_hosts(config)] == ["ssh.zugabot.ai"]
